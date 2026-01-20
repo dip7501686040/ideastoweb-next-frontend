@@ -1,6 +1,8 @@
 "use client"
 
 import { useAuth } from "@/hooks/useAuth"
+import TenantManagement from "@/components/tenant/TenantManagement"
+import TenantList from "@/components/tenant/TenantList"
 
 export default function DashboardPage() {
   const { user, logout, initializing } = useAuth()
@@ -98,6 +100,16 @@ export default function DashboardPage() {
               <p className="font-semibold">OWNER</p>
             </div>
           </div>
+        </div>
+
+        {/* Tenant Management Section */}
+        <div className="mb-8">
+          <TenantManagement />
+        </div>
+
+        {/* Tenant List Section */}
+        <div className="mb-8">
+          <TenantList />
         </div>
 
         {/* Features Grid */}

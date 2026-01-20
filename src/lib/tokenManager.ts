@@ -1,5 +1,7 @@
 import { CookieManager } from "./cookies"
-import { AuthApi } from "@/api/AuthApi"
+
+// Avoid importing AuthApi here to prevent circular dependency with BaseApi
+// Token refresh is performed directly via fetch to keep this module standalone
 
 /**
  * TokenManager class for handling JWT tokens and automatic refresh
@@ -76,17 +78,27 @@ export class TokenManager {
 
     this.refreshPromise = (async () => {
       try {
-        const api = new AuthApi()
-        const response = await api.refreshToken(refreshToken)
+        const res = await fetch("http://localhost:8000/auth/refresh-token", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refreshToken }),
+          credentials: "include"
+        })
 
-        // Update tokens in cookies
-        if (response.accessToken && response.refreshToken) {
-          this.setTokens(response.accessToken, response.refreshToken)
+        const data = await res.json()
+
+        if (!res.ok) {
+          this.clearTokens()
+          throw new Error(data.message || "Failed to refresh token")
         }
 
-        return response.accessToken
+        // Update tokens in cookies
+        if (data.accessToken && data.refreshToken) {
+          this.setTokens(data.accessToken, data.refreshToken)
+        }
+
+        return data.accessToken
       } catch (error) {
-        // If refresh fails, clear tokens and force re-login
         this.clearTokens()
         throw error
       } finally {
