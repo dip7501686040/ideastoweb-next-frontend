@@ -52,7 +52,52 @@ export class TenantApi extends BaseApi {
       name: response.name,
       dbName: response.dbName,
       createdAt: response.createdAt,
-      updatedAt: response.updatedAt
+      updatedAt: response.updatedAt,
+      deploymentConfig: response.deploymentConfig
+    })
+  }
+
+  /**
+   * Get tenant information by tenant ID
+   * @param tenantId - The tenant ID
+   * @returns Tenant details
+   */
+  async getTenantById(tenantId: string): Promise<Tenant> {
+    const response = await this.request<any>(`/tenants/by-id/${tenantId}`, {
+      method: "GET"
+    })
+
+    return new Tenant({
+      id: response.id,
+      tenantCode: response.tenantCode,
+      name: response.name,
+      dbName: response.dbName,
+      createdAt: response.createdAt,
+      updatedAt: response.updatedAt,
+      deploymentConfig: response.deploymentConfig
+    })
+  }
+
+  /**
+   * Update tenant deployment configuration
+   * @param tenantId - The tenant ID
+   * @param config - Deployment configuration
+   * @returns Updated tenant
+   */
+  async updateDeploymentConfig(tenantId: string, config: any): Promise<Tenant> {
+    const response = await this.request<any>(`/tenants/${tenantId}/deployment`, {
+      method: "PUT",
+      body: { deploymentConfig: config }
+    })
+
+    return new Tenant({
+      id: response.id,
+      tenantCode: response.tenantCode,
+      name: response.name,
+      dbName: response.dbName,
+      createdAt: response.createdAt,
+      updatedAt: response.updatedAt,
+      deploymentConfig: response.deploymentConfig
     })
   }
 

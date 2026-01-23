@@ -1,6 +1,7 @@
 import { BaseApi } from "./BaseApi"
 
 export class AuthApi extends BaseApi {
+  // Master user registration (main app)
   async registerMaster(data: { name: string; email: string; password: string; role: "OWNER" | "ADMIN" }) {
     return this.request("/auth/register", {
       method: "POST",
@@ -9,11 +10,30 @@ export class AuthApi extends BaseApi {
     })
   }
 
+  // Master user login (main app)
   async loginMaster(email: string, password: string) {
     return this.request("/auth/login", {
       method: "POST",
       body: { email, password },
       skipAuth: true // No auth needed for login
+    })
+  }
+
+  // Tenant user login
+  async login(data: { email: string; password: string; tenantCode?: string }) {
+    return this.request("/auth/login", {
+      method: "POST",
+      body: data,
+      skipAuth: true
+    })
+  }
+
+  // Tenant user registration
+  async register(data: { email: string; password: string; firstName?: string; lastName?: string; tenantCode?: string }) {
+    return this.request("/auth/register", {
+      method: "POST",
+      body: data,
+      skipAuth: true
     })
   }
 

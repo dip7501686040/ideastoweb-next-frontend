@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
+import { getTenantFromHost, isTenantRequest } from "./lib/tenant"
 
 // Routes that require authentication
 const protectedRoutes = ["/dashboard"]
@@ -7,13 +8,47 @@ const protectedRoutes = ["/dashboard"]
 // Routes that should redirect to dashboard if authenticated
 const authRoutes = ["/login", "/register", "/forgot-password"]
 
+// Tenant-specific routes that require tenant context
+const tenantRoutes = ["/auth", "/users", "/products", "/settings"]
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+  const hostname = request.headers.get("host") || ""
+
+  // Check if this is a tenant request
+  const tenant = getTenantFromHost(hostname)
+  const isTenant = !!tenant
 
   // Check if user has access token in cookies
   const accessToken = request.cookies.get("accessToken")?.value
   const isAuthenticated = !!accessToken
 
+  // Handle tenant-specific routing
+  if (isTenant) {
+    // Tenant root page is always accessible
+    if (pathname === "/") {
+      return NextResponse.next()
+    }
+
+    // Tenant auth routes (login, register) - redirect to home if already authenticated
+    if (pathname.startsWith("/auth") && isAuthenticated) {
+      return NextResponse.redirect(new URL("/", request.url))
+    }
+
+    // Protected tenant routes
+    const isProtectedTenantRoute = tenantRoutes.some((route) => pathname.startsWith(route))
+
+    // For user management and other protected pages, require authentication
+    if ((pathname.startsWith("/users") || pathname.startsWith("/products") || pathname.startsWith("/settings")) && !isAuthenticated) {
+      const loginUrl = new URL("/auth/login", request.url)
+      loginUrl.searchParams.set("redirect", pathname)
+      return NextResponse.redirect(loginUrl)
+    }
+
+    return NextResponse.next()
+  }
+
+  // Handle main app routing (non-tenant)
   // Check if current path is protected
   const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route))
 

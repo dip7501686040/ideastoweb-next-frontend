@@ -91,12 +91,38 @@ export default function ServiceManagement({ tenantCode }: ServiceManagementProps
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Header with Tenant URL */}
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Service Management</h2>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-gray-600 mb-4">
           Apply and manage services for tenant: <code className="bg-gray-100 px-2 py-1 rounded text-blue-600 font-mono">{tenantCode}</code>
         </p>
+
+        {/* Tenant Access URL */}
+        <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-start">
+            <svg className="w-5 h-5 text-blue-600 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
+              />
+            </svg>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-blue-900 mb-1">Tenant Frontend URL</p>
+              <a
+                href={`http://${tenantCode}.${process.env.NEXT_PUBLIC_MAIN_DOMAIN || "localhost"}${process.env.NODE_ENV === "production" ? "" : ":3000"}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-blue-700 hover:text-blue-800 underline break-all font-mono"
+              >
+                {`http://${tenantCode}.${process.env.NEXT_PUBLIC_MAIN_DOMAIN || "localhost"}${process.env.NODE_ENV === "production" ? "" : ":3000"}`}
+              </a>
+              <p className="text-xs text-blue-600 mt-1">Click to access your tenant portal</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Messages */}
@@ -126,31 +152,95 @@ export default function ServiceManagement({ tenantCode }: ServiceManagementProps
         </div>
       )}
 
-      {/* Enabled Services */}
+      {/* Enabled Services with Service URLs */}
       {enabledServices.length > 0 && (
         <div className="bg-white rounded-lg shadow p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">✅ Enabled Services ({enabledServices.length})</h3>
-          <div className="space-y-2">
+          <div className="space-y-3">
             {enabledServices.map((enabled, idx) => (
-              <div key={`enabled-${enabled.code ?? enabled.name ?? idx}-${enabled.id ?? idx}`} className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
-                <div className="flex items-center">
-                  <svg className="w-5 h-5 text-green-600 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  <div>
-                    <p className="font-semibold text-gray-900">{enabled.name}</p>
-                    <p className="text-xs text-gray-600">
-                      Code: {enabled.code} • Enabled: {new Date(enabled.enabledAt).toLocaleString()}
-                    </p>
+              <div key={`enabled-${enabled.code ?? enabled.name ?? idx}-${enabled.id ?? idx}`} className="border-2 border-green-200 rounded-lg p-4 bg-green-50">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-start flex-1">
+                    <svg className="w-5 h-5 text-green-600 mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <div className="flex-1">
+                      <p className="font-semibold text-gray-900 mb-1">{enabled.name}</p>
+                      <p className="text-xs text-gray-600 mb-2">
+                        Code: {enabled.code} • Enabled: {new Date(enabled.enabledAt).toLocaleString()}
+                      </p>
+
+                      {/* Service Access URLs */}
+                      <div className="mt-2 space-y-1.5">
+                        {enabled.code === "auth" && (
+                          <>
+                            <div className="flex items-center text-xs">
+                              <span className="text-gray-600 w-16">UI:</span>
+                              <a
+                                href={`http://${tenantCode}.${process.env.NEXT_PUBLIC_MAIN_DOMAIN || "localhost"}${process.env.NODE_ENV === "production" ? "" : ":3000"}/auth/login`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-700 underline font-mono"
+                              >
+                                /auth/login
+                              </a>
+                            </div>
+                            <div className="flex items-center text-xs">
+                              <span className="text-gray-600 w-16">API:</span>
+                              <span className="text-gray-700 font-mono">/api/auth/*</span>
+                            </div>
+                          </>
+                        )}
+                        {enabled.code === "user" && (
+                          <>
+                            <div className="flex items-center text-xs">
+                              <span className="text-gray-600 w-16">UI:</span>
+                              <a
+                                href={`http://${tenantCode}.${process.env.NEXT_PUBLIC_MAIN_DOMAIN || "localhost"}${process.env.NODE_ENV === "production" ? "" : ":3000"}/users`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-700 underline font-mono"
+                              >
+                                /users
+                              </a>
+                            </div>
+                            <div className="flex items-center text-xs">
+                              <span className="text-gray-600 w-16">API:</span>
+                              <span className="text-gray-700 font-mono">/api/users/*</span>
+                            </div>
+                          </>
+                        )}
+                        {enabled.code === "product" && (
+                          <>
+                            <div className="flex items-center text-xs">
+                              <span className="text-gray-600 w-16">UI:</span>
+                              <a
+                                href={`http://${tenantCode}.${process.env.NEXT_PUBLIC_MAIN_DOMAIN || "localhost"}${process.env.NODE_ENV === "production" ? "" : ":3000"}/products`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-700 underline font-mono"
+                              >
+                                /products
+                              </a>
+                            </div>
+                            <div className="flex items-center text-xs">
+                              <span className="text-gray-600 w-16">API:</span>
+                              <span className="text-gray-700 font-mono">/api/products/*</span>
+                            </div>
+                          </>
+                        )}
+                        {!["auth", "user", "product"].includes(enabled.code) && <div className="text-xs text-gray-500">Service endpoints will be available after implementation</div>}
+                      </div>
+                    </div>
                   </div>
+                  <button
+                    onClick={() => handleRemoveService(enabled.code)}
+                    disabled={removing === enabled.code}
+                    className="ml-4 px-3 py-1.5 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors disabled:opacity-50 flex-shrink-0"
+                  >
+                    {removing === enabled.code ? "Removing..." : "Remove"}
+                  </button>
                 </div>
-                <button
-                  onClick={() => handleRemoveService(enabled.code)}
-                  disabled={removing === enabled.code}
-                  className="px-3 py-1 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
-                >
-                  {removing === enabled.code ? "Removing..." : "Remove"}
-                </button>
               </div>
             ))}
           </div>
