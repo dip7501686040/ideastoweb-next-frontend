@@ -41,7 +41,7 @@ export default function TenantRegisterModern({ tenantCode }: TenantRegisterModer
         tenantCode
       })
 
-      router.push("/auth/login")
+      router.push("/login")
     } catch (err: any) {
       setError(err.message || "Registration failed")
     } finally {
@@ -188,7 +188,7 @@ export default function TenantRegisterModern({ tenantCode }: TenantRegisterModer
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
                 Already have an account?{" "}
-                <a href="/auth/login" className="text-green-600 hover:text-green-700 font-medium">
+                <a href="/login" className="text-green-600 hover:text-green-700 font-medium">
                   Sign in
                 </a>
               </p>

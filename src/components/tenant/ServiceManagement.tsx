@@ -177,12 +177,12 @@ export default function ServiceManagement({ tenantCode }: ServiceManagementProps
                             <div className="flex items-center text-xs">
                               <span className="text-gray-600 w-16">UI:</span>
                               <a
-                                href={`http://${tenantCode}.${process.env.NEXT_PUBLIC_MAIN_DOMAIN || "localhost"}${process.env.NODE_ENV === "production" ? "" : ":3000"}/auth/login`}
+                                href={`http://${tenantCode}.${process.env.NEXT_PUBLIC_MAIN_DOMAIN || "localhost"}${process.env.NODE_ENV === "production" ? "" : ":3000"}/login`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-blue-600 hover:text-blue-700 underline font-mono"
                               >
-                                /auth/login
+                                /login
                               </a>
                             </div>
                             <div className="flex items-center text-xs">

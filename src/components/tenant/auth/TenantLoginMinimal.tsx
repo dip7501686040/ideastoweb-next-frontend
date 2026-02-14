@@ -81,7 +81,7 @@ export default function TenantLoginMinimal({ tenantCode }: TenantLoginMinimalPro
           <a href="/auth/forgot-password" className="block text-sm text-gray-500 hover:text-gray-900">
             Forgot password?
           </a>
-          <a href="/auth/register" className="block text-sm text-gray-500 hover:text-gray-900">
+          <a href="/register" className="block text-sm text-gray-500 hover:text-gray-900">
             Create account
           </a>
         </div>

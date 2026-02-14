@@ -25,22 +25,31 @@ export function middleware(request: NextRequest) {
 
   // Handle tenant-specific routing
   if (isTenant) {
-    // Tenant root page is always accessible
+    // Rewrite tenant root to tenant-specific page
     if (pathname === "/") {
-      return NextResponse.next()
+      return NextResponse.rewrite(new URL("/tenant-page", request.url))
     }
 
-    // Tenant auth routes (login, register) - redirect to home if already authenticated
+    // Rewrite tenant auth routes to /auth/* for cleaner URLs
+    // /login -> /auth/login, /register -> /auth/register, /forgot-password -> /auth/forgot-password
+    if (pathname === "/login") {
+      return NextResponse.rewrite(new URL("/auth/login", request.url))
+    }
+    if (pathname === "/register") {
+      return NextResponse.rewrite(new URL("/auth/register", request.url))
+    }
+    if (pathname === "/forgot-password") {
+      return NextResponse.rewrite(new URL("/auth/forgot-password", request.url))
+    }
+
+    // Tenant auth routes - redirect to home if already authenticated
     if (pathname.startsWith("/auth") && isAuthenticated) {
       return NextResponse.redirect(new URL("/", request.url))
     }
 
-    // Protected tenant routes
-    const isProtectedTenantRoute = tenantRoutes.some((route) => pathname.startsWith(route))
-
-    // For user management and other protected pages, require authentication
+    // Protected tenant routes - require authentication
     if ((pathname.startsWith("/users") || pathname.startsWith("/products") || pathname.startsWith("/settings")) && !isAuthenticated) {
-      const loginUrl = new URL("/auth/login", request.url)
+      const loginUrl = new URL("/login", request.url)
       loginUrl.searchParams.set("redirect", pathname)
       return NextResponse.redirect(loginUrl)
     }
@@ -49,6 +58,11 @@ export function middleware(request: NextRequest) {
   }
 
   // Handle main app routing (non-tenant)
+  // Prevent direct access to internal tenant route
+  if (pathname === "/tenant-page") {
+    return NextResponse.redirect(new URL("/", request.url))
+  }
+
   // Check if current path is protected
   const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route))
 

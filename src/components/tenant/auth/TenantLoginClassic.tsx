@@ -103,7 +103,7 @@ export default function TenantLoginClassic({ tenantCode }: TenantLoginClassicPro
 
             <div className="mt-6 text-center text-sm text-gray-600">
               New user?{" "}
-              <a href="/auth/register" className="text-blue-600 hover:underline font-medium">
+              <a href="/register" className="text-blue-600 hover:underline font-medium">
                 Create an account
               </a>
             </div>

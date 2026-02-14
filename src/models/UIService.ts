@@ -20,6 +20,11 @@ export enum UITemplate {
   AUTH_CLASSIC = "auth-classic",
   AUTH_MINIMAL = "auth-minimal",
 
+  // Dashboard templates
+  DASHBOARD_MODERN = "dashboard-modern",
+  DASHBOARD_CLASSIC = "dashboard-classic",
+  DASHBOARD_MINIMAL = "dashboard-minimal",
+
   // User management templates
   USER_TABLE = "user-table",
   USER_GRID = "user-grid",
