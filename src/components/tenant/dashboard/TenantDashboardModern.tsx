@@ -21,12 +21,26 @@ export default function TenantDashboardModern({ tenantCode, tenantName }: Tenant
               </div>
               <span className="text-lg font-semibold text-gray-900">{tenantName}</span>
             </Link>
-            <Link
-              href="/login"
-              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-sm font-medium rounded-lg transition-all shadow-md hover:shadow-lg"
-            >
-              Sign In
-            </Link>
+            <div className="flex gap-4">
+              <Link
+                href="/users"
+                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-sm font-medium rounded-lg transition-all shadow-md hover:shadow-lg"
+              >
+                Users
+              </Link>
+              <Link
+                href="/products"
+                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-sm font-medium rounded-lg transition-all shadow-md hover:shadow-lg"
+              >
+                Products
+              </Link>
+              <Link
+                href="/settings"
+                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-sm font-medium rounded-lg transition-all shadow-md hover:shadow-lg"
+              >
+                Settings
+              </Link>
+            </div>
           </div>
         </div>
       </div>

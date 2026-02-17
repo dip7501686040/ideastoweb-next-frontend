@@ -64,11 +64,12 @@ export function useAuth() {
     initUser()
   }, [])
 
-  async function login(email: string, password: string) {
+  async function login(email: string, password: string, tenantCode?: string) {
     setLoading(true)
     setError(null)
     try {
-      const res = await api.loginMaster(email, password)
+      // Use tenant login if tenantCode is provided, otherwise use master login
+      const res = tenantCode ? await api.login({ email, password, tenantCode }) : await api.loginMaster(email, password)
 
       // Store tokens in cookies
       if (res.accessToken && res.refreshToken) {

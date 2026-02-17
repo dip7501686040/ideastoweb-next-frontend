@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth"
 import TenantManagement from "@/components/tenant/TenantManagement"
 import TenantList from "@/components/tenant/TenantList"
 
-export default function DashboardPage() {
+export default function MasterDashboardTemplate() {
   const { user, logout, initializing } = useAuth()
 
   if (initializing) {

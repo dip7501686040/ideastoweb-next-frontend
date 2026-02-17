@@ -1,35 +1,26 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { AuthApi } from "@/api/AuthApi"
+import { useAuth } from "@/hooks/useAuth"
 
 interface TenantLoginMinimalProps {
   tenantCode: string
 }
 
 export default function TenantLoginMinimal({ tenantCode }: TenantLoginMinimalProps) {
-  const router = useRouter()
+  const { login, loading, error: authError } = useAuth()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
-    setIsLoading(true)
 
     try {
-      const authApi = new AuthApi()
-      await authApi.login({ email, password, tenantCode })
-
-      router.push("/")
-      router.refresh()
+      await login(email, password, tenantCode)
     } catch (err: any) {
       setError(err.message || "Login failed")
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -41,7 +32,7 @@ export default function TenantLoginMinimal({ tenantCode }: TenantLoginMinimalPro
           <p className="text-gray-500 text-sm">Sign in</p>
         </div>
 
-        {error && <div className="mb-6 text-red-600 text-sm text-center border-b border-red-200 pb-3">{error}</div>}
+        {(error || authError) && <div className="mb-6 text-red-600 text-sm text-center border-b border-red-200 pb-3">{error || authError}</div>}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
@@ -70,10 +61,10 @@ export default function TenantLoginMinimal({ tenantCode }: TenantLoginMinimalPro
 
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={loading}
             className="w-full bg-gray-900 text-white py-3 rounded-sm font-medium hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {isLoading ? "..." : "Sign In"}
+            {loading ? "..." : "Sign In"}
           </button>
         </form>
 

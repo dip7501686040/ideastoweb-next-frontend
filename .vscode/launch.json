@@ -2,12 +2,27 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Next.js: Debug",
-      "type": "node-terminal",
+      "name": "Next.js: Full Stack",
+      "type": "node",
       "request": "launch",
-      "command": "pnpm run dev",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 9229,
       "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen"
+      "skipFiles": ["<node_internals>/**"],
+      "env": {
+        "NODE_OPTIONS": "--inspect"
+      },
+      "resolveSourceMapLocations": [
+        "${workspaceFolder}/**",
+        "!**/node_modules/**"
+      ],
+      "sourceMaps": true,
+      "serverReadyAction": {
+        "pattern": "- Local:.+(https?://.+)",
+        "uriFormat": "%s",
+        "action": "debugWithChrome"
+      }
     }
   ]
 }

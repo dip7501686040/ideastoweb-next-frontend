@@ -1,73 +1,31 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { AuthApi } from "@/api/AuthApi"
+import { useAuth } from "@/hooks/useAuth"
 
 interface TenantLoginModernProps {
   tenantCode: string
 }
 
 export default function TenantLoginModern({ tenantCode }: TenantLoginModernProps) {
-  const router = useRouter()
+  const { login, loading, error: authError } = useAuth()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
-    setIsLoading(true)
 
     try {
-      const authApi = new AuthApi()
-      await authApi.login({ email, password, tenantCode })
-
-      // Redirect to tenant dashboard
-      router.push("/")
-      router.refresh()
+      await login(email, password, tenantCode)
     } catch (err: any) {
       setError(err.message || "Login failed")
-    } finally {
-      setIsLoading(false)
     }
   }
 
   return (
     <div className="flex min-h-screen">
-      {/* Left side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-600 to-blue-800 p-12 flex-col justify-between">
-        <div>
-          <h1 className="text-4xl font-bold text-white mb-4">Welcome to {tenantCode}</h1>
-          <p className="text-blue-100 text-lg">Sign in to access your personalized dashboard and services</p>
-        </div>
-        <div className="space-y-6">
-          <div className="flex items-start space-x-4">
-            <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="text-white font-semibold mb-1">Secure Authentication</h3>
-              <p className="text-blue-100 text-sm">Enterprise-grade security for your data</p>
-            </div>
-          </div>
-          <div className="flex items-start space-x-4">
-            <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="text-white font-semibold mb-1">Fast & Reliable</h3>
-              <p className="text-blue-100 text-sm">Lightning-fast performance you can count on</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Right side - Login Form */}
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
@@ -77,7 +35,7 @@ export default function TenantLoginModern({ tenantCode }: TenantLoginModernProps
               <p className="text-gray-600">Enter your credentials to access your account</p>
             </div>
 
-            {error && <div className="mb-6 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">{error}</div>}
+            {(error || authError) && <div className="mb-6 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">{error || authError}</div>}
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
@@ -90,7 +48,7 @@ export default function TenantLoginModern({ tenantCode }: TenantLoginModernProps
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-gray-700"
                   placeholder="you@example.com"
                 />
               </div>
@@ -105,7 +63,7 @@ export default function TenantLoginModern({ tenantCode }: TenantLoginModernProps
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-gray-700"
                   placeholder="••••••••"
                 />
               </div>
@@ -122,10 +80,10 @@ export default function TenantLoginModern({ tenantCode }: TenantLoginModernProps
 
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={loading}
                 className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
-                {isLoading ? "Signing in..." : "Sign In"}
+                {loading ? "Signing in..." : "Sign In"}
               </button>
             </form>
 

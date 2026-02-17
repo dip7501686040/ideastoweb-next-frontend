@@ -3,6 +3,7 @@
  */
 
 import { headers } from "next/headers"
+import { redirect } from "next/navigation"
 import { getTenantFromHost, TenantConfig } from "./tenant"
 
 /**
@@ -16,21 +17,41 @@ export async function getTenantContext(): Promise<TenantConfig | null> {
 }
 
 /**
- * Get tenant code from request headers (Server Component)
+ * Get tenant information from request headers (alias for consistency)
  */
-export async function getCurrentTenantCode(): Promise<string | null> {
-  const tenant = await getTenantContext()
-  return tenant?.code || null
+export async function getServerTenant(): Promise<TenantConfig | null> {
+  const host = (await headers()).get("host") || ""
+  return getTenantFromHost(host)
 }
 
 /**
- * Require tenant context or throw error
+ * Get tenant code from request headers (Server Component)
+ */
+export async function getCurrentTenant(): Promise<TenantConfig | null> {
+  const tenant = await getTenantContext()
+  return tenant || null
+}
+
+/**
+ * Require tenant context or redirect
  */
 export async function requireTenant(): Promise<TenantConfig> {
-  const tenant = await getTenantContext()
+  const tenant = await getServerTenant()
 
   if (!tenant) {
-    throw new Error("Tenant context required")
+    redirect("/")
+  }
+
+  return tenant
+}
+/**
+ * Require master context or redirect
+ */
+export async function requireMaster(): Promise<TenantConfig | null> {
+  const tenant = await getServerTenant()
+
+  if (tenant) {
+    redirect("/")
   }
 
   return tenant

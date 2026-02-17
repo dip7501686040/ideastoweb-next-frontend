@@ -3,6 +3,11 @@ import type { NextConfig } from "next"
 const nextConfig: NextConfig = {
   /* config options here */
 
+  // Enable Turbopack (Next.js 16 default) with source maps for debugging
+  turbopack: {
+    // Turbopack generates source maps by default in dev mode
+  },
+
   // Enable experimental features for better subdomain support
   experimental: {
     // Enable server actions if needed

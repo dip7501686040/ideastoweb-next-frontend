@@ -107,7 +107,7 @@ export default function TenantRegisterModern({ tenantCode }: TenantRegisterModer
                     value={formData.firstName}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-700"
                     placeholder="John"
                   />
                 </div>
@@ -122,7 +122,7 @@ export default function TenantRegisterModern({ tenantCode }: TenantRegisterModer
                     value={formData.lastName}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-700"
                     placeholder="Doe"
                   />
                 </div>
@@ -139,7 +139,7 @@ export default function TenantRegisterModern({ tenantCode }: TenantRegisterModer
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-700"
                   placeholder="you@example.com"
                 />
               </div>
@@ -155,7 +155,7 @@ export default function TenantRegisterModern({ tenantCode }: TenantRegisterModer
                   value={formData.password}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-700"
                   placeholder="••••••••"
                 />
               </div>
@@ -171,7 +171,7 @@ export default function TenantRegisterModern({ tenantCode }: TenantRegisterModer
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-700"
                   placeholder="••••••••"
                 />
               </div>
