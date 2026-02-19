@@ -1,12 +1,15 @@
 "use client"
 
 import { useParams, useRouter } from "next/navigation"
+import { useState } from "react"
 import ServiceManagement from "@/components/tenant/ServiceManagement"
+import { tenantApi } from "@/api/TenantApi"
 
 export default function TenantDetailPage() {
   const params = useParams()
   const router = useRouter()
   const tenantCode = params.tenantCode as string
+  const [deleting, setDeleting] = useState(false)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -51,6 +54,37 @@ export default function TenantDetailPage() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <ServiceManagement tenantCode={tenantCode} />
+
+        {/* Danger Zone */}
+        <section className="mt-12 max-w-2xl">
+          <div className="bg-white shadow rounded-md p-6 border border-red-100">
+            <h2 className="text-lg font-semibold text-red-700">Danger Zone</h2>
+            <p className="text-sm text-gray-600 mt-2">Deleting a tenant is irreversible — it will remove the tenant and its database.</p>
+            <div className="mt-4">
+              <button
+                onClick={async () => {
+                  if (!confirm(`Are you sure you want to delete tenant '${tenantCode}'? This cannot be undone.`)) return
+                  try {
+                    setDeleting(true)
+                    await tenantApi.deleteTenant(tenantCode)
+                    router.push("/dashboard")
+                  } catch (err) {
+                    // minimal error handling — inform the user
+                    // eslint-disable-next-line no-alert
+                    alert("Failed to delete tenant. Please try again.")
+                  } finally {
+                    setDeleting(false)
+                  }
+                }}
+                disabled={deleting}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-60"
+                title="Delete tenant"
+              >
+                {deleting ? "Deleting…" : "Delete Tenant"}
+              </button>
+            </div>
+          </div>
+        </section>
       </main>
     </div>
   )
