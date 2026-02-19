@@ -1,3 +1,6 @@
+"use client"
+
+import { useAuth } from "@/hooks/useAuth"
 import Link from "next/link"
 
 interface TenantDashboardModernProps {
@@ -9,6 +12,7 @@ interface TenantDashboardModernProps {
  * Modern Dashboard Template - Card-based with gradient accents
  */
 export default function TenantDashboardModern({ tenantCode, tenantName }: TenantDashboardModernProps) {
+  const { logout } = useAuth()
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Navigation Header */}
@@ -40,6 +44,9 @@ export default function TenantDashboardModern({ tenantCode, tenantName }: Tenant
               >
                 Settings
               </Link>
+              <button onClick={logout} className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors cursor-pointer shadow-md hover:shadow-lg">
+                Logout
+              </button>
             </div>
           </div>
         </div>

@@ -123,7 +123,7 @@ export function useAuth() {
     setLoading(true)
     try {
       // Call backend logout endpoint
-      await api.logout()
+      // await api.logout()
     } catch (err) {
       // Ignore errors - we'll clear tokens anyway
     } finally {
