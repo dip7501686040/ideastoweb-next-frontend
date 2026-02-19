@@ -1,4 +1,5 @@
 import { BaseApi } from "./BaseApi"
+import getApiKeyForTenant from "@/lib/tenantApiKey"
 
 export class AuthApi extends BaseApi {
   // Master user registration (main app)
@@ -21,24 +22,28 @@ export class AuthApi extends BaseApi {
 
   // Tenant user login
   async login(data: { email: string; password: string; tenantCode?: string }) {
+    const apiKey = getApiKeyForTenant(data.tenantCode)
+
     return this.request("/auth/login", {
       method: "POST",
       body: data,
       skipAuth: true,
       headers: {
-        "x-api-key": "c717ece9b2ab13d98f4755a1e9299f37eb6985e6627b7a86542e2da96a6898ae" // Pass tenant code in header for backend to identify tenant context
+        "x-api-key": apiKey
       }
     })
   }
 
   // Tenant user registration
   async register(data: { email: string; password: string; firstName?: string; lastName?: string; tenantCode?: string }) {
+    const apiKey = getApiKeyForTenant(data.tenantCode)
+
     return this.request("/auth/register", {
       method: "POST",
       body: data,
       skipAuth: true,
       headers: {
-        "x-api-key": "c717ece9b2ab13d98f4755a1e9299f37eb6985e6627b7a86542e2da96a6898ae" // Pass tenant code in header for backend to identify tenant context
+        "x-api-key": apiKey
       }
     })
   }

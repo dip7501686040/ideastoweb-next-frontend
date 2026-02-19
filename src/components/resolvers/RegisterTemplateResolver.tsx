@@ -1,5 +1,6 @@
 import { getServerTenant } from "@/lib/tenantContext"
 import TenantRegisterModern from "@/components/tenant/auth/TenantRegisterModern"
+import MasterRegister from "../master/auth/MasterRegister"
 
 /**
  * 📝 SERVER-SIDE REGISTER TEMPLATE RESOLVER
@@ -12,14 +13,7 @@ export default async function RegisterTemplateResolver() {
 
   // Redirect or show error if no tenant (master domain)
   if (!tenant) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Registration Not Available</h1>
-          <p className="text-gray-600">Registration is only available on tenant domains.</p>
-        </div>
-      </div>
-    )
+    return <MasterRegister />
   }
 
   // TENANT REGISTER UI - Load template dynamically
