@@ -3,6 +3,7 @@
 import { ReactNode, useState } from "react"
 import { useAuth } from "@/hooks/useAuth"
 import { usePathname, useRouter } from "next/navigation"
+import { useRoot } from "@/providers/TenantProvider"
 import Link from "next/link"
 
 interface AdminLayoutProps {
@@ -11,9 +12,11 @@ interface AdminLayoutProps {
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const { user, logout, initializing } = useAuth()
+  const { adminConfig } = useRoot()
   const pathname = usePathname()
   const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [accessControlOpen, setAccessControlOpen] = useState(true)
 
   // Don't apply layout to login page
   if (pathname === "/login") {
@@ -31,6 +34,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     )
   }
 
+  // Check if user is master admin
+  const isMasterAdmin = adminConfig.isMasterAdmin
+
   const navigation = [
     {
       name: "Dashboard",
@@ -45,10 +51,14 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           />
         </svg>
       )
-    },
+    }
+  ]
+
+  // Access Control section with expandable submenu
+  const accessControlItems = [
     {
       name: "Users",
-      href: "/users",
+      href: "/access-control/users",
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -57,7 +67,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     },
     {
       name: "Roles",
-      href: "/roles",
+      href: "/access-control/roles",
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -70,29 +80,56 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       )
     },
     {
-      name: "Permissions",
-      href: "/permissions",
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-        </svg>
-      )
-    },
-    {
-      name: "Settings",
-      href: "/settings",
+      name: "Permissions Matrix",
+      href: "/access-control/permissions",
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth={2}
-            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
           />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
-      )
-    }
+      ),
+      featured: true // Mark as main RBAC screen
+    },
+    // Only show Modules & Operations for Master Admin
+    ...(isMasterAdmin
+      ? [
+          {
+            name: "Modules",
+            href: "/access-control/modules",
+            icon: (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                />
+              </svg>
+            ),
+            adminOnly: true
+          },
+          {
+            name: "Operations",
+            href: "/access-control/operations",
+            icon: (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            ),
+            adminOnly: true
+          }
+        ]
+      : [])
   ]
 
   const handleLogout = async () => {
@@ -131,6 +168,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
           {/* Navigation */}
           <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+            {/* Dashboard */}
             {navigation.map((item) => {
               const isActive = pathname === item.href
               return (
@@ -146,6 +184,46 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 </Link>
               )
             })}
+
+            {/* Access Control Section */}
+            <div className="pt-4">
+              <button onClick={() => setAccessControlOpen(!accessControlOpen)} className="w-full flex items-center justify-between px-4 py-2 text-gray-400 hover:text-white transition-colors">
+                <div className="flex items-center space-x-3">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  <span className="font-semibold text-sm uppercase tracking-wider">Access Control</span>
+                </div>
+                <svg className={`w-4 h-4 transition-transform duration-200 ${accessControlOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {/* Access Control Submenu */}
+              {accessControlOpen && (
+                <div className="mt-2 space-y-1 pl-2">
+                  {accessControlItems.map((item) => {
+                    const isActive = pathname === item.href
+                    return (
+                      <Link
+                        key={item.name}
+                        href={item.href}
+                        className={`flex items-center space-x-3 px-4 py-2.5 rounded-lg transition-all duration-200 ${
+                          isActive ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg" : "text-gray-300 hover:bg-gray-800 hover:text-white"
+                        } ${item.featured ? "border-l-2 border-yellow-500" : ""}`}
+                      >
+                        {item.icon}
+                        <div className="flex-1 flex items-center justify-between">
+                          <span className="font-medium text-sm">{item.name}</span>
+                          {item.featured && <span className="px-1.5 py-0.5 bg-yellow-500 text-yellow-900 text-xs rounded font-semibold">⭐</span>}
+                          {item.adminOnly && <span className="px-1.5 py-0.5 bg-purple-500 text-white text-xs rounded font-semibold">M</span>}
+                        </div>
+                      </Link>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
           </nav>
 
           {/* User info */}
@@ -173,7 +251,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 </svg>
               </button>
               <div>
-                <h1 className="text-xl font-semibold text-gray-900">{navigation.find((item) => item.href === pathname)?.name || "Admin Portal"}</h1>
+                <h1 className="text-xl font-semibold text-gray-900">{accessControlItems.find((item) => item.href === pathname)?.name || navigation.find((item) => item.href === pathname)?.name || "Admin Portal"}</h1>
+                <p className="text-xs text-gray-500 mt-0.5">{isMasterAdmin ? "Master Admin" : "Tenant Admin"}</p>
               </div>
             </div>
 

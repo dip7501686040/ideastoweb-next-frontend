@@ -2,6 +2,23 @@ import { BaseModel } from "./BaseModel"
 
 export type UserRole = "OWNER" | "ADMIN" | "USER" | "VIEWER"
 
+// Backend / API user shape
+export type ApiUser = {
+  id: string | null
+  email: string | null
+  password: string | null
+  name: string | null
+  status: string | null
+  createdBy: string | null
+  updatedBy: string | null
+  createdAt: Date | null
+  updatedAt: Date | null
+  // additional optional UI fields kept for frontend convenience
+  tenant?: string
+  roles?: string[]
+  lastActive?: string
+}
+
 export class User extends BaseModel {
   public readonly email: string
   public readonly name: string
