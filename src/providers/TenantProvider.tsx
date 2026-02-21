@@ -1,20 +1,26 @@
 "use client"
 
 import { createContext, useContext } from "react"
-import { TenantConfig } from "@/lib/tenant"
+import { TenantConfig, AdminConfig } from "@/lib/tenant"
 
-type TenantContextType = {
+type RootContextType = {
   tenant: TenantConfig | null
+  adminConfig: AdminConfig
 }
 
-const TenantContext = createContext<TenantContextType>({
-  tenant: null
+const RootContext = createContext<RootContextType>({
+  tenant: null,
+  adminConfig: {
+    isAdminDomain: false,
+    isMasterAdmin: false,
+    isTenantAdmin: false
+  }
 })
 
-export function TenantProvider({ tenant, children }: { tenant: TenantConfig; children: React.ReactNode }) {
-  return <TenantContext.Provider value={{ tenant }}>{children}</TenantContext.Provider>
+export function RootProvider({ tenant, adminConfig, children }: { tenant: TenantConfig | null; adminConfig: AdminConfig; children: React.ReactNode }) {
+  return <RootContext.Provider value={{ tenant, adminConfig }}>{children}</RootContext.Provider>
 }
 
-export function useTenant() {
-  return useContext(TenantContext)
+export function useRoot() {
+  return useContext(RootContext)
 }

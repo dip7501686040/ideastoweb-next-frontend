@@ -1,16 +1,17 @@
-import { requireTenant } from "@/lib/tenantContext"
+"use client"
+
+import { useRoot } from "@/providers/TenantProvider"
 import TenantUserTable from "@/components/tenant/users/TenantUserTable"
 import { UITemplate } from "@/models/UIService"
+import { useRouter } from "next/navigation"
+import { useEffect } from "react"
 
 /**
- * 👥 SERVER-SIDE USERS TEMPLATE RESOLVER
+ * 👥 USERS TEMPLATE RESOLVER
  * Requires tenant context (redirects if on master domain)
- * All tenant validation happens on the server
+ * Uses root context established once in root layout
  */
-export default async function UsersTemplateResolver() {
-  // Server-side tenant requirement (redirects to / if no tenant)
-  const tenant = await requireTenant()
-
+export default function UsersTemplateResolver() {
   // TODO: Fetch tenant's UI service configuration from API
   // Example: const uiConfig = await uiServiceApi.getTenantUIConfig(tenant.code, 'users')
   const template = process.env.NEXT_PUBLIC_DEFAULT_USERS_TEMPLATE || UITemplate.USER_TABLE
@@ -18,7 +19,7 @@ export default async function UsersTemplateResolver() {
   // Render appropriate template
   return (
     <div className="min-h-screen bg-gray-50">
-      <TenantUserTable tenantCode={tenant.code} />
+      <TenantUserTable />
     </div>
   )
 }

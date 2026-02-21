@@ -1,14 +1,9 @@
 import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
-import { headers } from "next/headers"
-import { getTenantFromHost } from "@/lib/tenant"
-import { TenantProvider } from "@/providers/TenantProvider"
-
-import MasterLayout from "@/components/layouts/master/MasterLayout"
-import TenantLayout from "@/components/layouts/tenant/TenantLayout"
+import { RootProvider } from "@/providers/TenantProvider"
 
 import "./globals.css"
-import { getCurrentTenant } from "@/lib/tenantContext"
+import { getCurrentTenant, getServerAdminConfig } from "@/lib/tenantContext"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,37 +21,27 @@ export const metadata: Metadata = {
 }
 
 /**
- * 🔥 ROOT LAYOUT — TENANT RESOLVER
- * Detects tenant ONCE at the root level
- * Provides global tenant context to all components
+ * 🔥 ROOT LAYOUT — CONTEXT PROVIDER
+ * Detects tenant and admin config ONCE at the root level
+ * Provides global context to all components via useRoot() hook
+ * This eliminates the need for getServerTenant() calls throughout the app
  */
 export default async function RootLayout({
   children
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  // Detect tenant once from hostname
+  // Detect context once from hostname
   const tenant = await getCurrentTenant()
-
-  /**
-   * Resolve which layout to use based on tenant detection
-   * - Master Layout: Main domain (localhost or configured main domain)
-   * - Tenant Layout: Subdomain or custom domain
-   */
-  function resolveLayout(content: React.ReactNode) {
-    if (!tenant) {
-      return <MasterLayout>{content}</MasterLayout>
-    }
-    return (
-      <TenantProvider tenant={tenant}>
-        <TenantLayout>{content}</TenantLayout>
-      </TenantProvider>
-    )
-  }
+  const adminConfig = await getServerAdminConfig()
 
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>{resolveLayout(children)}</body>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <RootProvider tenant={tenant} adminConfig={adminConfig}>
+          {children}
+        </RootProvider>
+      </body>
     </html>
   )
 }

@@ -1,15 +1,16 @@
-import { getServerTenant } from "@/lib/tenantContext"
+"use client"
+
+import { useRoot } from "@/providers/TenantProvider"
 import TenantRegisterModern from "@/components/tenant/auth/TenantRegisterModern"
 import MasterRegister from "../master/auth/MasterRegister"
 
 /**
- * 📝 SERVER-SIDE REGISTER TEMPLATE RESOLVER
- * Handles all tenant detection and template selection on the server
+ * 📝 REGISTER TEMPLATE RESOLVER
+ * Uses root context established once in root layout
  * Note: Registration is only available for tenants, not master portal
  */
-export default async function RegisterTemplateResolver() {
-  // Server-side tenant detection (happens once per request)
-  const tenant = await getServerTenant()
+export default function RegisterTemplateResolver() {
+  const { tenant } = useRoot()
 
   // Redirect or show error if no tenant (master domain)
   if (!tenant) {

@@ -1,13 +1,29 @@
-import { requireTenant } from "@/lib/tenantContext"
+"use client"
+
+import { useRoot } from "@/providers/TenantProvider"
+import { useRouter } from "next/navigation"
+import { useEffect } from "react"
 
 /**
- * ⚙️ SERVER-SIDE SETTINGS TEMPLATE RESOLVER
+ * ⚙️ SETTINGS TEMPLATE RESOLVER
  * Requires tenant context (redirects if on master domain)
- * All tenant validation happens on the server
+ * Uses root context established once in root layout
  */
-export default async function SettingsTemplateResolver() {
-  // Server-side tenant requirement (redirects to / if no tenant)
-  const tenant = await requireTenant()
+export default function SettingsTemplateResolver() {
+  const { tenant } = useRoot()
+  const router = useRouter()
+
+  useEffect(() => {
+    // Redirect to home if no tenant detected
+    if (!tenant) {
+      router.push("/")
+    }
+  }, [tenant, router])
+
+  // Don't render if no tenant
+  if (!tenant) {
+    return null
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">

@@ -1,5 +1,9 @@
-import { requireTenant } from "@/lib/tenantContext"
-import { ReactNode } from "react"
+"use client"
+
+import TenantLayout from "@/components/layouts/tenant/TenantLayout"
+import { useRoot } from "@/providers/TenantProvider"
+import { useRouter } from "next/navigation"
+import { ReactNode, useEffect } from "react"
 
 interface TenantLayoutProps {
   children: ReactNode
@@ -7,11 +11,24 @@ interface TenantLayoutProps {
 
 /**
  * (tenant) Route Group Layout
- * This is just a pass-through layout
- * Actual tenant UI comes from root layout's TenantLayout component
+ * Ensures only tenant domains can access these routes
+ * Uses useRoot() to access context detected once in root layout
  */
-export default async function TenantLayout({ children }: TenantLayoutProps) {
-  // Detect tenant once from hostname
-  await requireTenant() // This will throw if no tenant is detected, ensuring this layout is only used for tenant routes
-  return <>{children}</>
+export default function RootTenantLayout({ children }: TenantLayoutProps) {
+  const { tenant } = useRoot()
+  const router = useRouter()
+
+  useEffect(() => {
+    // Redirect if no tenant detected
+    if (!tenant) {
+      router.push("/")
+    }
+  }, [tenant, router])
+
+  // Don't render if no tenant
+  if (!tenant) {
+    return null
+  }
+
+  return <TenantLayout>{children}</TenantLayout>
 }

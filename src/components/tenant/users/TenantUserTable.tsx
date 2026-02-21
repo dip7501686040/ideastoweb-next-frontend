@@ -3,11 +3,9 @@
 import { useState, useEffect } from "react"
 import { User } from "@/models/User"
 
-interface TenantUserTableProps {
-  tenantCode: string
-}
+interface TenantUserTableProps {}
 
-export default function TenantUserTable({ tenantCode }: TenantUserTableProps) {
+export default function TenantUserTable({}: TenantUserTableProps) {
   const [users, setUsers] = useState<User[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
@@ -48,7 +46,7 @@ export default function TenantUserTable({ tenantCode }: TenantUserTableProps) {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">User Management</h1>
-        <p className="text-gray-600">Manage users for {tenantCode}</p>
+        <p className="text-gray-600">Manage users</p>
       </div>
 
       {/* Filters and Search */}

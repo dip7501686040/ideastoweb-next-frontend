@@ -1,18 +1,25 @@
-import { getServerTenant } from "@/lib/tenantContext"
+"use client"
+
+import { useRoot } from "@/providers/TenantProvider"
 import { UITemplate } from "@/models/UIService"
 import TenantDashboardModern from "@/components/tenant/dashboard/TenantDashboardModern"
 import TenantDashboardClassic from "@/components/tenant/dashboard/TenantDashboardClassic"
 import TenantDashboardMinimal from "@/components/tenant/dashboard/TenantDashboardMinimal"
 import MasterDashboardTemplate from "@/components/master/dashboard/MasterDashboardTemplate"
+import AdminDashboardTemplate from "@/components/admin/dashboard/AdminDashboardTemplate"
 
 /**
- * 📊 SERVER-SIDE DASHBOARD TEMPLATE RESOLVER
- * Handles all tenant detection and template selection on the server
- * Ensures security by never exposing tenant detection logic to the client
+ * 📊 DASHBOARD TEMPLATE RESOLVER
+ * Uses root context established once in root layout
+ * No duplicate tenant detection - cleaner and more efficient
  */
-export default async function DashboardTemplateResolver() {
-  // Server-side tenant detection (happens once per request)
-  const tenant = await getServerTenant()
+export default function DashboardTemplateResolver() {
+  const { tenant, adminConfig } = useRoot()
+
+  // ADMIN DASHBOARD UI - Admin subdomain detected
+  if (adminConfig.isAdminDomain) {
+    return <AdminDashboardTemplate />
+  }
 
   // MASTER DASHBOARD UI - No tenant detected
   if (!tenant) {

@@ -4,7 +4,7 @@
 
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
-import { getTenantFromHost, TenantConfig } from "./tenant"
+import { getTenantFromHost, TenantConfig, getAdminConfig, AdminConfig } from "./tenant"
 
 /**
  * Get tenant information from request headers (Server Component)
@@ -55,4 +55,12 @@ export async function requireMaster(): Promise<TenantConfig | null> {
   }
 
   return tenant
+}
+
+/**
+ * Get admin configuration from request headers (Server Component)
+ */
+export async function getServerAdminConfig(): Promise<AdminConfig> {
+  const host = (await headers()).get("host") || ""
+  return getAdminConfig(host)
 }

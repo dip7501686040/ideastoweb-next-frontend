@@ -1,17 +1,18 @@
-import { getServerTenant } from "@/lib/tenantContext"
+"use client"
+
+import { useRoot } from "@/providers/TenantProvider"
 import MasterHome from "@/components/master/home/MasterHome"
 import TenantHomeModern from "@/components/tenant/home/TenantHomeModern"
 import TenantHomeClassic from "@/components/tenant/home/TenantHomeClassic"
 import TenantHomeMinimal from "@/components/tenant/home/TenantHomeMinimal"
 
 /**
- * 🏠 SERVER-SIDE HOME TEMPLATE RESOLVER
- * Handles all tenant detection and template selection on the server
- * Ensures security by never exposing tenant detection logic to the client
+ * 🏠 HOME TEMPLATE RESOLVER
+ * Uses root context established once in root layout
+ * No duplicate tenant detection - cleaner and more efficient
  */
-export default async function HomeTemplateResolver() {
-  // Server-side tenant detection (happens once per request)
-  const tenant = await getServerTenant()
+export default function HomeTemplateResolver() {
+  const { tenant } = useRoot()
 
   // MASTER HOME UI - No tenant detected
   if (!tenant) {

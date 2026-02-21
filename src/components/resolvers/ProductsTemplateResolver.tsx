@@ -1,15 +1,31 @@
-import { requireTenant } from "@/lib/tenantContext"
+"use client"
+
+import { useRoot } from "@/providers/TenantProvider"
 import TenantProductGrid from "@/components/tenant/products/TenantProductGrid"
 import { UITemplate } from "@/models/UIService"
+import { useRouter } from "next/navigation"
+import { useEffect } from "react"
 
 /**
- * 🛍️ SERVER-SIDE PRODUCTS TEMPLATE RESOLVER
+ * 🛍️ PRODUCTS TEMPLATE RESOLVER
  * Requires tenant context (redirects if on master domain)
- * All tenant validation happens on the server
+ * Uses root context established once in root layout
  */
-export default async function ProductsTemplateResolver() {
-  // Server-side tenant requirement (redirects to / if no tenant)
-  const tenant = await requireTenant()
+export default function ProductsTemplateResolver() {
+  const { tenant } = useRoot()
+  const router = useRouter()
+
+  useEffect(() => {
+    // Redirect to home if no tenant detected
+    if (!tenant) {
+      router.push("/")
+    }
+  }, [tenant, router])
+
+  // Don't render if no tenant
+  if (!tenant) {
+    return null
+  }
 
   // TODO: Fetch tenant's UI service configuration from API
   // Example: const uiConfig = await uiServiceApi.getTenantUIConfig(tenant.code, 'products')

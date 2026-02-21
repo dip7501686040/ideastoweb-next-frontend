@@ -1,14 +1,15 @@
-import { getServerTenant } from "@/lib/tenantContext"
-import ForgotPasswordForm from "@/components/auth/ForgotPasswordForm"
+"use client"
+
+import { useRoot } from "@/providers/TenantProvider"
+import { ForgotPasswordForm } from "@/components/auth/ForgotPasswordForm"
 
 /**
- * 🔑 SERVER-SIDE FORGOT PASSWORD TEMPLATE RESOLVER
- * Handles all tenant detection on the server
+ * 🔑 FORGOT PASSWORD TEMPLATE RESOLVER
+ * Uses root context established once in root layout
  * Currently uses same form for both master and tenant
  */
-export default async function ForgotPasswordTemplateResolver() {
-  // Server-side tenant detection (happens once per request)
-  const tenant = await getServerTenant()
+export default function ForgotPasswordTemplateResolver() {
+  const { tenant } = useRoot()
 
   // Common forgot password form for both master and tenant
   // TODO: Create separate master/tenant templates if needed
