@@ -28,7 +28,11 @@ export function usePermissionsMatrix(roleId?: string, tenantCode?: string): UseP
       setLoading(true)
       setError(null)
 
-      const [modulesData, operationsData, permissionsData] = await Promise.all([rbacApi.getModules(tenantCode), rbacApi.getOperations(tenantCode), rbacApi.getPermissions(tenantCode)])
+      const [modulesData, operationsData, permissionsData] = await Promise.all([
+        rbacApi.getModules(tenantCode),
+        rbacApi.getOperations(tenantCode),
+        roleId ? rbacApi.getRolePermissions(roleId, tenantCode) : rbacApi.getPermissions(tenantCode)
+      ])
 
       setModules(modulesData)
       setOperations(operationsData)
@@ -39,7 +43,7 @@ export function usePermissionsMatrix(roleId?: string, tenantCode?: string): UseP
     } finally {
       setLoading(false)
     }
-  }, [tenantCode])
+  }, [roleId, tenantCode])
 
   useEffect(() => {
     fetchData()

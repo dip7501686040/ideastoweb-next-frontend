@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react"
 import { rbacApi } from "@/api/RbacApi"
-import { RoleApiType } from "@/models/Role"
+import { RoleApiType, UserRoleType } from "@/models/Role"
 
 interface UseRolesResult {
   roles: RoleApiType[]
@@ -12,7 +12,7 @@ interface UseRolesResult {
   deleteRole: (id: string) => Promise<void>
   assignRoleToUser: (userId: string, roleId: string) => Promise<void>
   removeRoleFromUser: (userId: string, roleId: string) => Promise<void>
-  getUserRoles: (userId: string) => Promise<RoleApiType[]>
+  getUserRoles: (userId: string) => Promise<UserRoleType[]>
 }
 
 export function useRoles(tenantCode?: string): UseRolesResult {

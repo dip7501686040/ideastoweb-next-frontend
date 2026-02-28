@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useUsers } from "@/hooks/useUsers"
 import { useRoles } from "@/hooks/useRoles"
 import { ApiUser } from "@/models/User"
-import { RoleApiType } from "@/models/Role"
+import { UserRoleType } from "@/models/Role"
 import { showToast, handleApiError } from "@/lib/utils"
 
 /**
@@ -17,55 +17,72 @@ export default function UsersRBAC() {
   const { roles, loading: rolesLoading, assignRoleToUser, removeRoleFromUser, getUserRoles } = useRoles()
 
   const [selectedUser, setSelectedUser] = useState<ApiUser | null>(null)
-  const [selectedUserRoles, setSelectedUserRoles] = useState<RoleApiType[]>([])
+  const [selectedUserRoles, setSelectedUserRoles] = useState<UserRoleType[]>([])
+  const [originalUserRoles, setOriginalUserRoles] = useState<UserRoleType[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [filterRole, setFilterRole] = useState<string>("all")
   const [filterStatus, setFilterStatus] = useState<string>("all")
   const [isLoadingRoles, setIsLoadingRoles] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
 
   // Load selected user's roles
   useEffect(() => {
     if (selectedUser?.id) {
       setIsLoadingRoles(true)
       getUserRoles(selectedUser.id)
-        .then(setSelectedUserRoles)
+        .then((fetchedRoles) => {
+          setSelectedUserRoles(fetchedRoles)
+          setOriginalUserRoles(fetchedRoles)
+        })
         .catch((err) => handleApiError(err, "Failed to load user roles"))
         .finally(() => setIsLoadingRoles(false))
+    } else {
+      setSelectedUserRoles([])
+      setOriginalUserRoles([])
     }
   }, [selectedUser, getUserRoles])
 
-  // Handle role assignment
-  const handleAssignRole = async (roleId: string) => {
+  // Stage role addition locally (no API call yet)
+  const handleAssignRole = (roleId: string) => {
     if (!selectedUser?.id) return
+    const roleObj = roles.find((r) => r.id === roleId)
+    if (!roleObj) return
+    const newUserRole: UserRoleType = { roleId, userId: selectedUser.id, role: roleObj }
+    setSelectedUserRoles((prev) => [...prev, newUserRole])
+  }
 
+  // Stage role removal locally (no API call yet)
+  const handleRemoveRole = (roleId: string) => {
+    setSelectedUserRoles((prev) => prev.filter((ur) => ur.roleId !== roleId))
+  }
+
+  // Commit all staged changes to the API
+  const handleSaveChanges = async () => {
+    if (!selectedUser?.id) return
+    setIsSaving(true)
     try {
-      await assignRoleToUser(selectedUser.id, roleId)
-      showToast({ message: "Role assigned successfully", type: "success" })
+      const originalIds = new Set(originalUserRoles.map((ur) => ur.roleId))
+      const currentIds = new Set(selectedUserRoles.map((ur) => ur.roleId))
 
-      // Refresh user roles
-      const updatedRoles = await getUserRoles(selectedUser.id)
-      setSelectedUserRoles(updatedRoles)
+      const toAdd = selectedUserRoles.filter((ur) => !originalIds.has(ur.roleId))
+      const toRemove = originalUserRoles.filter((ur) => !currentIds.has(ur.roleId))
+
+      await Promise.all([...toAdd.map((ur) => assignRoleToUser(selectedUser.id!, ur.roleId)), ...toRemove.map((ur) => removeRoleFromUser(selectedUser.id!, ur.roleId))])
+
+      showToast({ message: "User roles saved successfully", type: "success" })
       await refetchUsers()
+      setSelectedUser(null)
     } catch (err) {
-      handleApiError(err, "Failed to assign role")
+      handleApiError(err, "Failed to save role changes")
+    } finally {
+      setIsSaving(false)
     }
   }
 
-  // Handle role removal
-  const handleRemoveRole = async (roleId: string) => {
-    if (!selectedUser?.id) return
-
-    try {
-      await removeRoleFromUser(selectedUser.id, roleId)
-      showToast({ message: "Role removed successfully", type: "success" })
-
-      // Refresh user roles
-      const updatedRoles = await getUserRoles(selectedUser.id)
-      setSelectedUserRoles(updatedRoles)
-      await refetchUsers()
-    } catch (err) {
-      handleApiError(err, "Failed to remove role")
-    }
+  // Discard staged changes and close drawer
+  const handleCancel = () => {
+    setSelectedUserRoles(originalUserRoles)
+    setSelectedUser(null)
   }
 
   const filteredUsers = users.filter((user) => {
@@ -241,7 +258,7 @@ export default function UsersRBAC() {
 
       {/* User Details Drawer */}
       {selectedUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-end">
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-end">
           <div className="bg-white h-full w-full max-w-xl shadow-2xl overflow-y-auto">
             {/* Drawer Header */}
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
@@ -292,8 +309,8 @@ export default function UsersRBAC() {
                     {selectedUserRoles.length === 0 ? (
                       <div className="text-sm text-gray-500">No roles assigned</div>
                     ) : (
-                      selectedUserRoles.map((role) => (
-                        <div key={role.id} className="flex items-center justify-between bg-blue-50 rounded-lg p-3">
+                      selectedUserRoles.map(({ role }, index) => (
+                        <div key={role.id ?? index} className="flex items-center justify-between bg-blue-50 rounded-lg p-3">
                           <span className="font-medium text-blue-900">{role.name}</span>
                           <button onClick={() => role.id && handleRemoveRole(role.id)} className="text-red-600 hover:text-red-700 text-sm">
                             Remove
@@ -315,7 +332,7 @@ export default function UsersRBAC() {
                   >
                     <option value="">Add role...</option>
                     {roles
-                      .filter((role) => !selectedUserRoles.some((ur) => ur.id === role.id))
+                      .filter((role) => !selectedUserRoles.some((ur) => ur.roleId === role.id))
                       .map((role) => (
                         <option key={role.id} value={role.id || ""}>
                           {role.name}
@@ -364,8 +381,12 @@ export default function UsersRBAC() {
 
               {/* Action Buttons */}
               <div className="flex gap-3 pt-4 border-t border-gray-200">
-                <button className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">Save Changes</button>
-                <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium">Cancel</button>
+                <button onClick={handleSaveChanges} disabled={isSaving} className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                  {isSaving ? "Saving..." : "Save Changes"}
+                </button>
+                <button onClick={handleCancel} disabled={isSaving} className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                  Cancel
+                </button>
               </div>
             </div>
           </div>

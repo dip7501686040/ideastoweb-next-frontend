@@ -1,5 +1,11 @@
 import { BaseModel } from "./BaseModel"
 
+export type UserRoleType = {
+  roleId: string
+  userId: string
+  role: RoleApiType
+}
+
 export type RoleApiType = {
   id: string | null
   name: string | null

@@ -1,8 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRoles } from "@/hooks/useRoles"
 import { usePermissionsMatrix } from "@/hooks/usePermissionsMatrix"
+import { rbacApi } from "@/api/RbacApi"
 import { showToast, handleApiError } from "@/lib/utils"
 
 /**
@@ -14,9 +15,13 @@ export default function PermissionsMatrix() {
   // Fetch roles
   const { roles, loading: rolesLoading } = useRoles()
   const [selectedRole, setSelectedRole] = useState<string>("")
+  const [isSaving, setIsSaving] = useState(false)
+
+  // Staged permission keys: "moduleKey:operationKey"
+  const [stagedKeys, setStagedKeys] = useState<Set<string>>(new Set())
 
   // Fetch matrix data for selected role
-  const { modules, operations, permissions, loading: matrixLoading, error, hasPermission, togglePermission, refetch } = usePermissionsMatrix(selectedRole || undefined)
+  const { modules, operations, permissions, loading: matrixLoading, error, refetch } = usePermissionsMatrix(selectedRole || undefined)
 
   // Set first role as selected when roles load
   if (!selectedRole && roles.length > 0 && roles[0].id) {
@@ -25,15 +30,54 @@ export default function PermissionsMatrix() {
 
   const selectedRoleObj = roles.find((r) => r.id === selectedRole)
 
-  const handleToggle = async (moduleKey: string | null, operationKey: string | null) => {
-    if (!selectedRole || !moduleKey || !operationKey) return
+  // Sync staged state whenever fetched permissions change (role switch or refetch)
+  useEffect(() => {
+    setStagedKeys(new Set(permissions.map((p) => `${p.moduleKey}:${p.operationKey}`)))
+  }, [permissions])
 
+  const localHasPermission = useCallback((moduleKey: string, operationKey: string) => stagedKeys.has(`${moduleKey}:${operationKey}`), [stagedKeys])
+
+  // Toggle only updates local staged state — no API call
+  const handleToggle = (moduleKey: string | null, operationKey: string | null) => {
+    if (!moduleKey || !operationKey) return
+    const key = `${moduleKey}:${operationKey}`
+    setStagedKeys((prev) => {
+      const next = new Set(prev)
+      next.has(key) ? next.delete(key) : next.add(key)
+      return next
+    })
+  }
+
+  // Commit all staged changes to the API
+  const handleSaveChanges = async () => {
+    if (!selectedRole) return
+    setIsSaving(true)
     try {
-      await togglePermission(selectedRole, moduleKey, operationKey)
-      showToast({ message: "Permission updated", type: "success" })
+      const originalKeys = new Set(permissions.map((p) => `${p.moduleKey}:${p.operationKey}`))
+
+      const toAdd = [...stagedKeys].filter((k) => !originalKeys.has(k))
+      const toRemove = permissions.filter((p) => !stagedKeys.has(`${p.moduleKey}:${p.operationKey}`))
+
+      await Promise.all([
+        ...toAdd.map((k) => {
+          const [moduleKey, operationKey] = k.split(":")
+          return rbacApi.assignPermissionToRole(selectedRole, { moduleKey, operationKey })
+        }),
+        ...toRemove.map((p) => p.id && rbacApi.removePermissionFromRole(selectedRole, p.id))
+      ])
+
+      showToast({ message: "Permissions saved successfully", type: "success" })
+      await refetch()
     } catch (err) {
-      handleApiError(err, "Failed to update permission")
+      handleApiError(err, "Failed to save permissions")
+    } finally {
+      setIsSaving(false)
     }
+  }
+
+  // Discard staged changes
+  const handleCancel = () => {
+    setStagedKeys(new Set(permissions.map((p) => `${p.moduleKey}:${p.operationKey}`)))
   }
 
   return (
@@ -45,8 +89,12 @@ export default function PermissionsMatrix() {
           <p className="text-gray-600 mt-1">Manage role permissions with visual matrix interface</p>
         </div>
         <div className="flex gap-3">
-          <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium">Clone Role</button>
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">Save Changes</button>
+          <button onClick={handleCancel} disabled={isSaving} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+            Cancel
+          </button>
+          <button onClick={handleSaveChanges} disabled={isSaving || !selectedRole} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+            {isSaving ? "Saving..." : "Save Changes"}
+          </button>
         </div>
       </div>
 
@@ -118,12 +166,12 @@ export default function PermissionsMatrix() {
                       <td key={op.id} className="px-4 py-4 text-center">
                         <button
                           onClick={() => handleToggle(module.key, op.key)}
-                          disabled={selectedRoleObj?.isSystem === true}
+                          disabled={selectedRoleObj?.isSystem === true || isSaving}
                           className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
-                            hasPermission(module.key || "", op.key || "") ? "bg-green-100 text-green-600 hover:bg-green-200" : " bg-gray-100 text-gray-400 hover:bg-gray-200"
-                          } ${selectedRoleObj?.isSystem === true ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                            localHasPermission(module.key || "", op.key || "") ? "bg-green-100 text-green-600 hover:bg-green-200" : " bg-gray-100 text-gray-400 hover:bg-gray-200"
+                          } ${selectedRoleObj?.isSystem === true || isSaving ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
                         >
-                          {hasPermission(module.key || "", op.key || "") ? (
+                          {localHasPermission(module.key || "", op.key || "") ? (
                             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                             </svg>
@@ -152,7 +200,7 @@ export default function PermissionsMatrix() {
         <h3 className="text-sm font-semibold text-blue-900 mb-3">Quick Summary</h3>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
           {modules.map((module) => {
-            const modulePerms = operations.filter((op) => hasPermission(module.key || "", op.key || "")).map((op) => op.key?.charAt(0) || "")
+            const modulePerms = operations.filter((op) => localHasPermission(module.key || "", op.key || "")).map((op) => op.key?.charAt(0) || "")
             return (
               <div key={module.id} className="bg-white rounded-lg p-3 border border-blue-200">
                 <div className="text-sm font-medium text-gray-900">{module.key}</div>

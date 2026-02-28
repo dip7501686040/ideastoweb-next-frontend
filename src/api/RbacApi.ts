@@ -53,6 +53,15 @@ export class RbacApi extends BaseApi {
   }
 
   // Role permissions
+  async getRolePermissions(roleId: string, tenantCode?: string) {
+    const apiKey = tenantCode ? getApiKeyForTenant(tenantCode) : undefined
+    return this.request<PermissionApiType[]>(`/rbac/roles/${roleId}/permissions`, {
+      method: "GET",
+      headers: apiKey ? { "x-api-key": apiKey } : undefined,
+      skipAuth: !!apiKey
+    })
+  }
+
   async assignPermissionToRole(roleId: string, permission: { moduleKey: string; operationKey: string }, tenantCode?: string) {
     const apiKey = tenantCode ? getApiKeyForTenant(tenantCode) : undefined
     return this.request(`/rbac/roles/${roleId}/permissions`, {
@@ -260,6 +269,17 @@ export class RbacApi extends BaseApi {
       method: "DELETE",
       headers: apiKey ? { "x-api-key": apiKey } : undefined,
       skipAuth: !!apiKey
+    })
+  }
+
+  // Super Admin Credentials (master JWT only)
+  async getSuperAdminCreds(tenantCode: string) {
+    return this.request<{
+      tenantCode: string
+      tenantName: string
+      credentials: { email: string; password: string }
+    }>(`/rbac/super-admin/creds/${tenantCode}`, {
+      method: "GET"
     })
   }
 }
