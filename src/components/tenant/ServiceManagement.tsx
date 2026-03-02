@@ -26,6 +26,8 @@ export default function ServiceManagement({ tenantCode }: ServiceManagementProps
   const [superAdminCreds, setSuperAdminCreds] = useState<SuperAdminCreds | null>(null)
   const [showPassword, setShowPassword] = useState(false)
   const [copiedField, setCopiedField] = useState<string | null>(null)
+  const [syncing, setSyncing] = useState(false)
+  const [syncResult, setSyncResult] = useState<{ added: number; total: number } | null>(null)
 
   useEffect(() => {
     loadData()
@@ -74,6 +76,21 @@ export default function ServiceManagement({ tenantCode }: ServiceManagementProps
       setError(err.message || "Failed to apply service")
     } finally {
       setApplying(null)
+    }
+  }
+
+  const handleSyncPermissions = async () => {
+    try {
+      setSyncing(true)
+      setError("")
+      const result = await rbacApi.syncSuperAdminPermissions(tenantCode)
+      const totalAdded = result.roles.reduce((sum, r) => sum + r.added, 0)
+      setSyncResult({ added: totalAdded, total: result.totalPermissions })
+      setSuccessMessage(`${result.message}\n` + result.roles.map((r) => `${r.role}: +${r.added} new, ${r.alreadyHad} already had`).join("\n"))
+    } catch (err: any) {
+      setError(err.message || "Failed to sync permissions")
+    } finally {
+      setSyncing(false)
     }
   }
 
@@ -264,6 +281,37 @@ export default function ServiceManagement({ tenantCode }: ServiceManagementProps
                               >
                                 {`admin.${tenantCode}.${process.env.NEXT_PUBLIC_MAIN_DOMAIN || "localhost"}`}
                               </a>
+                            </div>
+                            <div className="flex items-center text-xs mt-1">
+                              <span className="text-gray-600 w-16"></span>
+                              <button
+                                onClick={handleSyncPermissions}
+                                disabled={syncing}
+                                className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                title="Seed any missing permissions to super admin roles (idempotent)"
+                              >
+                                {syncing ? (
+                                  <>
+                                    <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                                    </svg>
+                                    Syncing...
+                                  </>
+                                ) : (
+                                  <>
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                    Sync Permissions
+                                  </>
+                                )}
+                              </button>
+                              {syncResult && !syncing && (
+                                <span className="ml-2 text-xs text-purple-600">
+                                  +{syncResult.added} synced · {syncResult.total} total
+                                </span>
+                              )}
                             </div>
                             {superAdminCreds && (
                               <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">

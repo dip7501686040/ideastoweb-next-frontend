@@ -210,6 +210,19 @@ export class RbacApi extends BaseApi {
       method: "GET"
     })
   }
+
+  async syncSuperAdminPermissions(tenantCode: string) {
+    return this.request<{
+      message: string
+      tenant: { id: string; code: string }
+      seed: { modulesCreated: number; operationsCreated: number; permissionsCreated: number }
+      totalPermissions: number
+      roles: Array<{ role: string; added: number; alreadyHad: number }>
+    }>("/rbac/super-admin/sync-permissions", {
+      method: "POST",
+      headers: { "X-Tenant-Code": tenantCode }
+    })
+  }
 }
 
 export const rbacApi = new RbacApi()

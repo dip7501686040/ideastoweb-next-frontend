@@ -1,5 +1,10 @@
 import RolesManagement from "@/components/admin/rbac/RolesManagement"
+import TenantServiceGuard from "@/components/admin/TenantServiceGuard"
 
 export default function RolesPage() {
-  return <RolesManagement />
+  return (
+    <TenantServiceGuard serviceCode="rbac">
+      <RolesManagement />
+    </TenantServiceGuard>
+  )
 }

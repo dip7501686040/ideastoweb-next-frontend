@@ -4,6 +4,7 @@ import { ReactNode, useState } from "react"
 import { useAuth } from "@/hooks/useAuth"
 import { usePathname, useRouter } from "next/navigation"
 import { useRoot } from "@/providers/TenantProvider"
+import { useEnabledServices } from "@/hooks/useEnabledServices"
 import Link from "next/link"
 
 interface AdminLayoutProps {
@@ -17,6 +18,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [accessControlOpen, setAccessControlOpen] = useState(true)
+
+  const isMasterAdmin = adminConfig.isMasterAdmin
+  const isTenantAdmin = adminConfig.isTenantAdmin
+
+  // Fetch enabled services (self-contained: master admin always passes, tenant admin checks API)
+  const { hasService } = useEnabledServices()
 
   // Don't apply layout to login page
   if (pathname === "/login") {
@@ -33,9 +40,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       </div>
     )
   }
-
-  // Check if user is master admin
-  const isMasterAdmin = adminConfig.isMasterAdmin
 
   const navigation = [
     {
@@ -59,6 +63,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     {
       name: "Users",
       href: "/access-control/users",
+      serviceCode: "user",
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -68,6 +73,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     {
       name: "Roles",
       href: "/access-control/roles",
+      serviceCode: "rbac",
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -82,6 +88,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     {
       name: "Permissions Matrix",
       href: "/access-control/permissions",
+      serviceCode: "rbac",
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -100,6 +107,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           {
             name: "Modules",
             href: "/access-control/modules",
+            serviceCode: "rbac",
             icon: (
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -115,6 +123,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           {
             name: "Operations",
             href: "/access-control/operations",
+            serviceCode: "rbac",
             icon: (
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -131,6 +140,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         ]
       : [])
   ]
+
+  // For tenant admin: filter nav items to only those whose service is enabled.
+  // For master admin: show all items.
+  const visibleAccessControlItems = isTenantAdmin ? accessControlItems.filter((item) => !item.serviceCode || hasService(item.serviceCode)) : accessControlItems
 
   const handleLogout = async () => {
     await logout()
@@ -202,7 +215,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               {/* Access Control Submenu */}
               {accessControlOpen && (
                 <div className="mt-2 space-y-1 pl-2">
-                  {accessControlItems.map((item) => {
+                  {visibleAccessControlItems.map((item) => {
                     const isActive = pathname === item.href
                     return (
                       <Link
@@ -251,7 +264,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 </svg>
               </button>
               <div>
-                <h1 className="text-xl font-semibold text-gray-900">{accessControlItems.find((item) => item.href === pathname)?.name || navigation.find((item) => item.href === pathname)?.name || "Admin Portal"}</h1>
+                <h1 className="text-xl font-semibold text-gray-900">
+                  {visibleAccessControlItems.find((item) => item.href === pathname)?.name || navigation.find((item) => item.href === pathname)?.name || "Admin Portal"}
+                </h1>
                 <p className="text-xs text-gray-500 mt-0.5">{isMasterAdmin ? "Master Admin" : "Tenant Admin"}</p>
               </div>
             </div>

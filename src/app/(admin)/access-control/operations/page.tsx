@@ -1,5 +1,10 @@
 import OperationsManagement from "@/components/admin/rbac/OperationsManagement"
+import TenantServiceGuard from "@/components/admin/TenantServiceGuard"
 
 export default function OperationsPage() {
-  return <OperationsManagement />
+  return (
+    <TenantServiceGuard serviceCode="rbac">
+      <OperationsManagement />
+    </TenantServiceGuard>
+  )
 }

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useUsers } from "@/hooks/useUsers"
 import { useRoles } from "@/hooks/useRoles"
+import { useEnabledServices } from "@/hooks/useEnabledServices"
 import { ApiUser } from "@/models/User"
 import { UserRoleType } from "@/models/Role"
 import { showToast, handleApiError } from "@/lib/utils"
@@ -15,6 +16,9 @@ export default function UsersRBAC() {
   // Fetch data from API
   const { users, loading: usersLoading, error: usersError, refetch: refetchUsers } = useUsers()
   const { roles, loading: rolesLoading, assignRoleToUser, removeRoleFromUser, getUserRoles } = useRoles()
+
+  const { hasService } = useEnabledServices()
+  const hasRbac = hasService("rbac")
 
   const [selectedUser, setSelectedUser] = useState<ApiUser | null>(null)
   const [selectedUserRoles, setSelectedUserRoles] = useState<UserRoleType[]>([])
@@ -158,14 +162,16 @@ export default function UsersRBAC() {
             </div>
           </div>
           <div className="flex gap-3">
-            <select value={filterRole} onChange={(e) => setFilterRole(e.target.value)} className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900">
-              <option value="all">All Roles</option>
-              {roles.map((role) => (
-                <option key={role.id} value={role.name || ""}>
-                  {role.name}
-                </option>
-              ))}
-            </select>
+            {hasRbac && (
+              <select value={filterRole} onChange={(e) => setFilterRole(e.target.value)} className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900">
+                <option value="all">All Roles</option>
+                {roles.map((role) => (
+                  <option key={role.id} value={role.name || ""}>
+                    {role.name}
+                  </option>
+                ))}
+              </select>
+            )}
             <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900">
               <option value="all">All Status</option>
               <option value="active">Active</option>
