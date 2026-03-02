@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from "react"
+import { useState, useCallback } from "react"
 import { rbacApi } from "@/api/RbacApi"
 import { PermissionApiType } from "@/models/Permission"
+import { useFetchOnce } from "@/hooks/useFetchOnce"
 import { ModuleApiType } from "@/models/Module"
 import { OperationApiType } from "@/models/Operation"
 
@@ -16,7 +17,7 @@ interface UsePermissionsMatrixResult {
   assignPermissionsBulk: (roleId: string, permissions: Array<{ moduleKey: string; operationKey: string }>) => Promise<void>
 }
 
-export function usePermissionsMatrix(roleId?: string): UsePermissionsMatrixResult {
+export function usePermissionsMatrix(roleId?: string, enabled = true): UsePermissionsMatrixResult {
   const [modules, setModules] = useState<ModuleApiType[]>([])
   const [operations, setOperations] = useState<OperationApiType[]>([])
   const [permissions, setPermissions] = useState<PermissionApiType[]>([])
@@ -41,9 +42,7 @@ export function usePermissionsMatrix(roleId?: string): UsePermissionsMatrixResul
     }
   }, [roleId])
 
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
+  useFetchOnce(fetchData, enabled)
 
   const hasPermission = useCallback(
     (moduleKey: string, operationKey: string) => {

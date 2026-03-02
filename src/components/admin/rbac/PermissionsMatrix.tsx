@@ -20,13 +20,15 @@ export default function PermissionsMatrix() {
   // Staged permission keys: "moduleKey:operationKey"
   const [stagedKeys, setStagedKeys] = useState<Set<string>>(new Set())
 
-  // Fetch matrix data for selected role
-  const { modules, operations, permissions, loading: matrixLoading, error, refetch } = usePermissionsMatrix(selectedRole || undefined)
+  // Set first role as selected when roles load (via effect, not render-time mutation)
+  useEffect(() => {
+    if (!selectedRole && roles.length > 0 && roles[0].id) {
+      setSelectedRole(roles[0].id)
+    }
+  }, [roles, selectedRole])
 
-  // Set first role as selected when roles load
-  if (!selectedRole && roles.length > 0 && roles[0].id) {
-    setSelectedRole(roles[0].id)
-  }
+  // Fetch matrix data only once a role is selected
+  const { modules, operations, permissions, loading: matrixLoading, error, refetch } = usePermissionsMatrix(selectedRole || undefined, !!selectedRole)
 
   const selectedRoleObj = roles.find((r) => r.id === selectedRole)
 

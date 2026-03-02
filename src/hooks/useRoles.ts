@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from "react"
+import { useState, useCallback } from "react"
 import { rbacApi } from "@/api/RbacApi"
 import { RoleApiType, UserRoleType } from "@/models/Role"
+import { useFetchOnce } from "@/hooks/useFetchOnce"
 
 interface UseRolesResult {
   roles: RoleApiType[]
@@ -34,9 +35,7 @@ export function useRoles(): UseRolesResult {
     }
   }, [])
 
-  useEffect(() => {
-    fetchRoles()
-  }, [fetchRoles])
+  useFetchOnce(fetchRoles)
 
   const createRole = useCallback(
     async (data: { name: string; description?: string; permissions?: Array<{ moduleKey: string; operationKey: string }> }) => {

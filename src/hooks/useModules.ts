@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from "react"
+import { useState, useCallback } from "react"
 import { rbacApi } from "@/api/RbacApi"
 import { ModuleApiType } from "@/models/Module"
+import { useFetchOnce } from "@/hooks/useFetchOnce"
 
 interface UseModulesResult {
   modules: ModuleApiType[]
@@ -31,9 +32,7 @@ export function useModules(): UseModulesResult {
     }
   }, [])
 
-  useEffect(() => {
-    fetchModules()
-  }, [fetchModules])
+  useFetchOnce(fetchModules)
 
   const createModule = useCallback(
     async (data: { key: string; description?: string }) => {

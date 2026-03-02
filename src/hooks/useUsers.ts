@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from "react"
+import { useState, useCallback } from "react"
 import { userApi } from "@/api/UserApi"
 import { ApiUser } from "@/models/User"
+import { useFetchOnce } from "@/hooks/useFetchOnce"
 
 interface UseUsersResult {
   users: ApiUser[]
@@ -31,9 +32,7 @@ export function useUsers(): UseUsersResult {
     }
   }, [])
 
-  useEffect(() => {
-    fetchUsers()
-  }, [fetchUsers])
+  useFetchOnce(fetchUsers)
 
   const createUser = useCallback(
     async (data: Partial<ApiUser>) => {

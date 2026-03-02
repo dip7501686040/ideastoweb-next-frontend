@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from "react"
+import { useState, useCallback } from "react"
 import { rbacApi } from "@/api/RbacApi"
 import { OperationApiType } from "@/models/Operation"
+import { useFetchOnce } from "@/hooks/useFetchOnce"
 
 interface UseOperationsResult {
   operations: OperationApiType[]
@@ -31,9 +32,7 @@ export function useOperations(): UseOperationsResult {
     }
   }, [])
 
-  useEffect(() => {
-    fetchOperations()
-  }, [fetchOperations])
+  useFetchOnce(fetchOperations)
 
   const createOperation = useCallback(
     async (data: { key: string; description?: string }) => {
