@@ -123,21 +123,6 @@ export class TenantApi extends BaseApi {
       method: "DELETE"
     })
   }
-
-  /**
-   * Test protected endpoint with API key
-   * @param apiKey - The API key to test
-   * @returns Protected resource response
-   */
-  async testProtectedRoute(apiKey: string): Promise<{ message: string }> {
-    return this.request<{ message: string }>("/tenants/protected", {
-      method: "GET",
-      headers: {
-        "x-api-key": apiKey
-      },
-      skipAuth: true // Use API key instead of Bearer token
-    })
-  }
 }
 
 // Export singleton instance

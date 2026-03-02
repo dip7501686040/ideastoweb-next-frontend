@@ -141,11 +141,37 @@ export class TokenManager {
   }
 
   /**
-   * Get user info from access token
+   * Get user info from access token.
+   * Maps the NEW JWT payload shape:
+   * { userId, email, type, tenantId, tenantCode, roles, iat, exp }
    */
   static getUserFromToken(): any {
     const token = this.getAccessToken()
     if (!token) return null
     return this.decodeToken(token)
+  }
+
+  /**
+   * Return the token type: "MASTER" | "TENANT" | null
+   */
+  static getTokenType(): "MASTER" | "TENANT" | null {
+    const payload = this.getUserFromToken()
+    return payload?.type ?? null
+  }
+
+  /**
+   * Return the tenantCode embedded in the token, or null for master tokens.
+   */
+  static getTenantCodeFromToken(): string | null {
+    const payload = this.getUserFromToken()
+    return payload?.tenantCode ?? null
+  }
+
+  /**
+   * Return the roles array from the token payload.
+   */
+  static getRolesFromToken(): string[] {
+    const payload = this.getUserFromToken()
+    return Array.isArray(payload?.roles) ? payload.roles : []
   }
 }

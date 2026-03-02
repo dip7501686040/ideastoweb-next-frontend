@@ -15,7 +15,7 @@ interface UseRolesResult {
   getUserRoles: (userId: string) => Promise<UserRoleType[]>
 }
 
-export function useRoles(tenantCode?: string): UseRolesResult {
+export function useRoles(): UseRolesResult {
   const [roles, setRoles] = useState<RoleApiType[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -24,7 +24,7 @@ export function useRoles(tenantCode?: string): UseRolesResult {
     try {
       setLoading(true)
       setError(null)
-      const data = await rbacApi.getRoles(tenantCode)
+      const data = await rbacApi.getRoles()
       setRoles(data)
     } catch (err: any) {
       setError(err.message || "Failed to load roles")
@@ -32,7 +32,7 @@ export function useRoles(tenantCode?: string): UseRolesResult {
     } finally {
       setLoading(false)
     }
-  }, [tenantCode])
+  }, [])
 
   useEffect(() => {
     fetchRoles()
@@ -42,82 +42,73 @@ export function useRoles(tenantCode?: string): UseRolesResult {
     async (data: { name: string; description?: string; permissions?: Array<{ moduleKey: string; operationKey: string }> }) => {
       try {
         setError(null)
-        await rbacApi.createRole(data, tenantCode)
+        await rbacApi.createRole(data)
         await fetchRoles()
       } catch (err: any) {
         setError(err.message || "Failed to create role")
         throw err
       }
     },
-    [tenantCode, fetchRoles]
+    [fetchRoles]
   )
 
   const updateRole = useCallback(
     async (id: string, data: { name?: string; description?: string }) => {
       try {
         setError(null)
-        await rbacApi.updateRole(id, data, tenantCode)
+        await rbacApi.updateRole(id, data)
         await fetchRoles()
       } catch (err: any) {
         setError(err.message || "Failed to update role")
         throw err
       }
     },
-    [tenantCode, fetchRoles]
+    [fetchRoles]
   )
 
   const deleteRole = useCallback(
     async (id: string) => {
       try {
         setError(null)
-        await rbacApi.deleteRole(id, tenantCode)
+        await rbacApi.deleteRole(id)
         await fetchRoles()
       } catch (err: any) {
         setError(err.message || "Failed to delete role")
         throw err
       }
     },
-    [tenantCode, fetchRoles]
+    [fetchRoles]
   )
 
-  const assignRoleToUser = useCallback(
-    async (userId: string, roleId: string) => {
-      try {
-        setError(null)
-        await rbacApi.assignRoleToUser(userId, roleId, tenantCode)
-      } catch (err: any) {
-        setError(err.message || "Failed to assign role")
-        throw err
-      }
-    },
-    [tenantCode]
-  )
+  const assignRoleToUser = useCallback(async (userId: string, roleId: string) => {
+    try {
+      setError(null)
+      await rbacApi.assignRoleToUser(userId, roleId)
+    } catch (err: any) {
+      setError(err.message || "Failed to assign role")
+      throw err
+    }
+  }, [])
 
-  const removeRoleFromUser = useCallback(
-    async (userId: string, roleId: string) => {
-      try {
-        setError(null)
-        await rbacApi.removeRoleFromUser(userId, roleId, tenantCode)
-      } catch (err: any) {
-        setError(err.message || "Failed to remove role")
-        throw err
-      }
-    },
-    [tenantCode]
-  )
+  const removeRoleFromUser = useCallback(async (userId: string, roleId: string) => {
+    try {
+      setError(null)
+      await rbacApi.removeRoleFromUser(userId, roleId)
+    } catch (err: any) {
+      setError(err.message || "Failed to remove role")
+      throw err
+    }
+  }, [])
 
-  const getUserRoles = useCallback(
-    async (userId: string) => {
-      try {
-        setError(null)
-        return await rbacApi.getUserRoles(userId, tenantCode)
-      } catch (err: any) {
-        setError(err.message || "Failed to get user roles")
-        throw err
-      }
-    },
-    [tenantCode]
-  )
+  const getUserRoles = useCallback(async (userId: string) => {
+    try {
+      setError(null)
+      return await rbacApi.getUserRoles(userId)
+    } catch (err: any) {
+      setError(err.message || "Failed to get user roles")
+      throw err
+    }
+  }, [])
 
   return {
     roles,

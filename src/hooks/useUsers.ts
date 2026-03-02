@@ -12,7 +12,7 @@ interface UseUsersResult {
   deleteUser: (id: string) => Promise<void>
 }
 
-export function useUsers(tenantCode?: string): UseUsersResult {
+export function useUsers(): UseUsersResult {
   const [users, setUsers] = useState<ApiUser[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -21,7 +21,7 @@ export function useUsers(tenantCode?: string): UseUsersResult {
     try {
       setLoading(true)
       setError(null)
-      const data = await userApi.getAll(tenantCode)
+      const data = await userApi.getAll()
       setUsers(data)
     } catch (err: any) {
       setError(err.message || "Failed to load users")
@@ -29,7 +29,7 @@ export function useUsers(tenantCode?: string): UseUsersResult {
     } finally {
       setLoading(false)
     }
-  }, [tenantCode])
+  }, [])
 
   useEffect(() => {
     fetchUsers()
@@ -39,42 +39,42 @@ export function useUsers(tenantCode?: string): UseUsersResult {
     async (data: Partial<ApiUser>) => {
       try {
         setError(null)
-        await userApi.create(data, tenantCode)
+        await userApi.create(data)
         await fetchUsers()
       } catch (err: any) {
         setError(err.message || "Failed to create user")
         throw err
       }
     },
-    [tenantCode, fetchUsers]
+    [fetchUsers]
   )
 
   const updateUser = useCallback(
     async (id: string, data: Partial<ApiUser>) => {
       try {
         setError(null)
-        await userApi.update(id, data, tenantCode)
+        await userApi.update(id, data)
         await fetchUsers()
       } catch (err: any) {
         setError(err.message || "Failed to update user")
         throw err
       }
     },
-    [tenantCode, fetchUsers]
+    [fetchUsers]
   )
 
   const deleteUser = useCallback(
     async (id: string) => {
       try {
         setError(null)
-        await userApi.delete(id, tenantCode)
+        await userApi.delete(id)
         await fetchUsers()
       } catch (err: any) {
         setError(err.message || "Failed to delete user")
         throw err
       }
     },
-    [tenantCode, fetchUsers]
+    [fetchUsers]
   )
 
   return {

@@ -39,17 +39,6 @@ export default function TenantManagement() {
     navigator.clipboard.writeText(text)
   }
 
-  const handleTestApiKey = async () => {
-    if (!success?.apiKey) return
-
-    try {
-      const response = await tenantApi.testProtectedRoute(success.apiKey)
-      alert(`✅ Success: ${response.message}`)
-    } catch (err: any) {
-      alert(`❌ Error: ${err.message}`)
-    }
-  }
-
   return (
     <div className="bg-white rounded-lg shadow p-6">
       <h2 className="text-2xl font-bold text-gray-900 mb-6">Tenant Management</h2>
@@ -146,16 +135,11 @@ export default function TenantManagement() {
                 </div>
               </div>
 
-              {/* Warning */}
-              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
-                <p className="text-xs text-yellow-800 font-semibold">⚠️ Important: Save this API key now!</p>
-                <p className="text-xs text-yellow-700 mt-1">This key will not be shown again. Store it securely.</p>
+              {/* Note */}
+              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
+                <p className="text-xs text-blue-800 font-semibold">ℹ️ Server-to-server use only</p>
+                <p className="text-xs text-blue-700 mt-1">This API key is for backend service integration. Browser clients use JWT for authentication.</p>
               </div>
-
-              {/* Test Button */}
-              <button onClick={handleTestApiKey} className="mt-4 w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded transition-colors">
-                🧪 Test API Key
-              </button>
             </div>
           </div>
         </div>

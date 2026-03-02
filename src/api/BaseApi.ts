@@ -14,7 +14,7 @@ export class BaseApi {
     // Get access token for authenticated requests
     let accessToken = TokenManager.getAccessToken()
 
-    // Prepare headers
+    // Prepare headers — never include x-api-key; JWT is the only auth mechanism
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
       ...(options.headers || {})
@@ -29,16 +29,13 @@ export class BaseApi {
       method: options.method || "GET",
       headers,
       body: options.body ? JSON.stringify(options.body) : undefined,
-      credentials: "include" // 🔥 cookies (access + refresh)
+      credentials: "include"
     })
 
-    // If request fails with 401 (Unauthorized), try to refresh token
+    // 401 on an authenticated request — attempt token refresh once
     if (res.status === 401 && !options.skipAuth && TokenManager.getRefreshToken()) {
       try {
-        // Attempt to refresh the access token
         accessToken = await TokenManager.refreshAccessToken()
-
-        // Retry the original request with new token
         headers["Authorization"] = `Bearer ${accessToken}`
 
         res = await fetch(`${this.baseUrl}${path}`, {
@@ -48,7 +45,7 @@ export class BaseApi {
           credentials: "include"
         })
       } catch (refreshError) {
-        // If refresh fails, clear tokens and throw error
+        // Refresh failed — clear tokens and redirect to login
         TokenManager.clearTokens()
         if (typeof window !== "undefined") {
           window.location.href = "/login"
@@ -57,9 +54,31 @@ export class BaseApi {
       }
     }
 
-    const data = await res.json()
+    const data = await res.json().catch(() => ({}))
 
     if (!res.ok) {
+      // 401 after refresh attempt — could be a legacy token missing the `type` field
+      if (res.status === 401) {
+        const msg: string = data.message || ""
+        if (msg.toLowerCase().includes("type") || msg.toLowerCase().includes("legacy")) {
+          TokenManager.clearTokens()
+          if (typeof window !== "undefined") {
+            window.location.href = "/login"
+          }
+          throw new Error("Your session is outdated. Please log in again.")
+        }
+        throw new Error(msg || "Unauthorized")
+      }
+
+      // 404 on a pre-auth route — likely an unknown x-tenant-code
+      if (res.status === 404) {
+        const msg: string = data.message || ""
+        if (msg.toLowerCase().includes("tenant") || headers["x-tenant-code"]) {
+          throw new Error("Invalid tenant. Please check the URL and try again.")
+        }
+        throw new Error(msg || "Not found")
+      }
+
       throw new Error(data.message || "Request failed")
     }
 

@@ -16,7 +16,7 @@ interface UsePermissionsMatrixResult {
   assignPermissionsBulk: (roleId: string, permissions: Array<{ moduleKey: string; operationKey: string }>) => Promise<void>
 }
 
-export function usePermissionsMatrix(roleId?: string, tenantCode?: string): UsePermissionsMatrixResult {
+export function usePermissionsMatrix(roleId?: string): UsePermissionsMatrixResult {
   const [modules, setModules] = useState<ModuleApiType[]>([])
   const [operations, setOperations] = useState<OperationApiType[]>([])
   const [permissions, setPermissions] = useState<PermissionApiType[]>([])
@@ -28,11 +28,7 @@ export function usePermissionsMatrix(roleId?: string, tenantCode?: string): UseP
       setLoading(true)
       setError(null)
 
-      const [modulesData, operationsData, permissionsData] = await Promise.all([
-        rbacApi.getModules(tenantCode),
-        rbacApi.getOperations(tenantCode),
-        roleId ? rbacApi.getRolePermissions(roleId, tenantCode) : rbacApi.getPermissions(tenantCode)
-      ])
+      const [modulesData, operationsData, permissionsData] = await Promise.all([rbacApi.getModules(), rbacApi.getOperations(), roleId ? rbacApi.getRolePermissions(roleId) : rbacApi.getPermissions()])
 
       setModules(modulesData)
       setOperations(operationsData)
@@ -43,7 +39,7 @@ export function usePermissionsMatrix(roleId?: string, tenantCode?: string): UseP
     } finally {
       setLoading(false)
     }
-  }, [roleId, tenantCode])
+  }, [roleId])
 
   useEffect(() => {
     fetchData()
@@ -66,11 +62,11 @@ export function usePermissionsMatrix(roleId?: string, tenantCode?: string): UseP
           // Remove permission
           const permission = permissions.find((p) => p.moduleKey === moduleKey && p.operationKey === operationKey)
           if (permission?.id) {
-            await rbacApi.removePermissionFromRole(roleId, permission.id, tenantCode)
+            await rbacApi.removePermissionFromRole(roleId, permission.id)
           }
         } else {
           // Add permission
-          await rbacApi.assignPermissionToRole(roleId, { moduleKey, operationKey }, tenantCode)
+          await rbacApi.assignPermissionToRole(roleId, { moduleKey, operationKey })
         }
 
         await fetchData()
@@ -79,21 +75,21 @@ export function usePermissionsMatrix(roleId?: string, tenantCode?: string): UseP
         throw err
       }
     },
-    [hasPermission, permissions, tenantCode, fetchData]
+    [hasPermission, permissions, fetchData]
   )
 
   const assignPermissionsBulk = useCallback(
     async (roleId: string, permissionsToAssign: Array<{ moduleKey: string; operationKey: string }>) => {
       try {
         setError(null)
-        await rbacApi.assignPermissionsBulk(roleId, { permissions: permissionsToAssign }, tenantCode)
+        await rbacApi.assignPermissionsBulk(roleId, { permissions: permissionsToAssign })
         await fetchData()
       } catch (err: any) {
         setError(err.message || "Failed to assign permissions")
         throw err
       }
     },
-    [tenantCode, fetchData]
+    [fetchData]
   )
 
   return {

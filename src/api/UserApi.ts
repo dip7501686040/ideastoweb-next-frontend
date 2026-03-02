@@ -1,47 +1,41 @@
 import { ApiUser } from "@/models/User"
 import { BaseApi } from "./BaseApi"
-import getApiKeyForTenant from "@/lib/tenantApiKey"
 
+/**
+ * User API client.
+ * All requests use JWT-based auth — tenant DB routing is handled by the backend
+ * from the token's tenantId / tenantCode fields. No x-api-key needed.
+ */
 export class UserApi extends BaseApi {
-  async getAll(tenantCode?: string): Promise<ApiUser[]> {
-    const apiKey = tenantCode ? getApiKeyForTenant(tenantCode) : undefined
+  async getAll(): Promise<ApiUser[]> {
     return this.request<ApiUser[]>("/users", {
-      method: "GET",
-      headers: apiKey ? { "x-api-key": apiKey } : undefined
+      method: "GET"
     })
   }
 
-  async getById(id: string, tenantCode?: string): Promise<ApiUser> {
-    const apiKey = tenantCode ? getApiKeyForTenant(tenantCode) : undefined
+  async getById(id: string): Promise<ApiUser> {
     return this.request<ApiUser>(`/users/${id}`, {
-      method: "GET",
-      headers: apiKey ? { "x-api-key": apiKey } : undefined
+      method: "GET"
     })
   }
 
-  async create(data: Partial<ApiUser>, tenantCode?: string): Promise<ApiUser> {
-    const apiKey = tenantCode ? getApiKeyForTenant(tenantCode) : undefined
+  async create(data: Partial<ApiUser>): Promise<ApiUser> {
     return this.request<ApiUser>("/users", {
       method: "POST",
-      body: data,
-      headers: apiKey ? { "x-api-key": apiKey } : undefined
+      body: data
     })
   }
 
-  async update(id: string, data: Partial<ApiUser>, tenantCode?: string): Promise<ApiUser> {
-    const apiKey = tenantCode ? getApiKeyForTenant(tenantCode) : undefined
+  async update(id: string, data: Partial<ApiUser>): Promise<ApiUser> {
     return this.request<ApiUser>(`/users/${id}`, {
       method: "PUT",
-      body: data,
-      headers: apiKey ? { "x-api-key": apiKey } : undefined
+      body: data
     })
   }
 
-  async delete(id: string, tenantCode?: string): Promise<{ message?: string }> {
-    const apiKey = tenantCode ? getApiKeyForTenant(tenantCode) : undefined
+  async delete(id: string): Promise<{ message?: string }> {
     return this.request<{ message?: string }>(`/users/${id}`, {
-      method: "DELETE",
-      headers: apiKey ? { "x-api-key": apiKey } : undefined
+      method: "DELETE"
     })
   }
 }

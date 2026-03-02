@@ -12,7 +12,7 @@ interface UseModulesResult {
   deleteModule: (id: string) => Promise<void>
 }
 
-export function useModules(tenantCode?: string): UseModulesResult {
+export function useModules(): UseModulesResult {
   const [modules, setModules] = useState<ModuleApiType[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -21,7 +21,7 @@ export function useModules(tenantCode?: string): UseModulesResult {
     try {
       setLoading(true)
       setError(null)
-      const data = await rbacApi.getModules(tenantCode)
+      const data = await rbacApi.getModules()
       setModules(data)
     } catch (err: any) {
       setError(err.message || "Failed to load modules")
@@ -29,7 +29,7 @@ export function useModules(tenantCode?: string): UseModulesResult {
     } finally {
       setLoading(false)
     }
-  }, [tenantCode])
+  }, [])
 
   useEffect(() => {
     fetchModules()
@@ -39,42 +39,42 @@ export function useModules(tenantCode?: string): UseModulesResult {
     async (data: { key: string; description?: string }) => {
       try {
         setError(null)
-        await rbacApi.createModule(data, tenantCode)
+        await rbacApi.createModule(data)
         await fetchModules()
       } catch (err: any) {
         setError(err.message || "Failed to create module")
         throw err
       }
     },
-    [tenantCode, fetchModules]
+    [fetchModules]
   )
 
   const updateModule = useCallback(
     async (id: string, data: { key?: string; description?: string }) => {
       try {
         setError(null)
-        await rbacApi.updateModule(id, data, tenantCode)
+        await rbacApi.updateModule(id, data)
         await fetchModules()
       } catch (err: any) {
         setError(err.message || "Failed to update module")
         throw err
       }
     },
-    [tenantCode, fetchModules]
+    [fetchModules]
   )
 
   const deleteModule = useCallback(
     async (id: string) => {
       try {
         setError(null)
-        await rbacApi.deleteModule(id, tenantCode)
+        await rbacApi.deleteModule(id)
         await fetchModules()
       } catch (err: any) {
         setError(err.message || "Failed to delete module")
         throw err
       }
     },
-    [tenantCode, fetchModules]
+    [fetchModules]
   )
 
   return {

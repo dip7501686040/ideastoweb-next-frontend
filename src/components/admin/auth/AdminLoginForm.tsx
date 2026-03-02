@@ -2,9 +2,11 @@
 
 import { useState, FormEvent } from "react"
 import { useAuth } from "@/hooks/useAuth"
+import { useRoot } from "@/providers/TenantProvider"
 
 export function AdminLoginForm() {
   const { login, loading, error } = useAuth()
+  const { adminConfig } = useRoot()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
@@ -12,7 +14,9 @@ export function AdminLoginForm() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     try {
-      await login(email, password)
+      // isTenantAdmin → send x-tenant-code so the backend routes to the right DB
+      // isMasterAdmin → no tenant code, routes to master DB
+      await login(email, password, adminConfig.isTenantAdmin ? adminConfig.tenantCode : undefined)
     } catch (err) {
       // Error handled by hook
     }

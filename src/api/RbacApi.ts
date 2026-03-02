@@ -1,278 +1,206 @@
 import { BaseApi } from "./BaseApi"
-import getApiKeyForTenant from "@/lib/tenantApiKey"
 import { RoleApiType } from "@/models/Role"
 import { PermissionApiType } from "@/models/Permission"
 
+/**
+ * RBAC API client.
+ * All requests are authenticated via the JWT in the Authorization header.
+ * The backend resolves the tenant DB from the token's tenantId / tenantCode.
+ * No x-api-key or tenantCode argument is needed here.
+ */
 export class RbacApi extends BaseApi {
-  // Roles
-  async createRole(data: Partial<RoleApiType>, tenantCode?: string) {
-    const apiKey = tenantCode ? getApiKeyForTenant(tenantCode) : undefined
+  // ─── Roles ───────────────────────────────────────────────────────────────
+
+  async createRole(data: Partial<RoleApiType>) {
     return this.request<RoleApiType>("/rbac/roles", {
       method: "POST",
-      body: data,
-      headers: apiKey ? { "x-api-key": apiKey } : undefined,
-      skipAuth: !!apiKey
+      body: data
     })
   }
 
-  async getRoles(tenantCode?: string) {
-    const apiKey = tenantCode ? getApiKeyForTenant(tenantCode) : undefined
+  async getRoles() {
     return this.request<RoleApiType[]>("/rbac/roles", {
-      method: "GET",
-      headers: apiKey ? { "x-api-key": apiKey } : undefined,
-      skipAuth: !!apiKey
+      method: "GET"
     })
   }
 
-  async getRoleById(id: string, tenantCode?: string) {
-    const apiKey = tenantCode ? getApiKeyForTenant(tenantCode) : undefined
+  async getRoleById(id: string) {
     return this.request<RoleApiType>(`/rbac/roles/${id}`, {
-      method: "GET",
-      headers: apiKey ? { "x-api-key": apiKey } : undefined,
-      skipAuth: !!apiKey
+      method: "GET"
     })
   }
 
-  async updateRole(id: string, data: Partial<RoleApiType>, tenantCode?: string) {
-    const apiKey = tenantCode ? getApiKeyForTenant(tenantCode) : undefined
+  async updateRole(id: string, data: Partial<RoleApiType>) {
     return this.request<RoleApiType>(`/rbac/roles/${id}`, {
       method: "PUT",
-      body: data,
-      headers: apiKey ? { "x-api-key": apiKey } : undefined,
-      skipAuth: !!apiKey
+      body: data
     })
   }
 
-  async deleteRole(id: string, tenantCode?: string) {
-    const apiKey = tenantCode ? getApiKeyForTenant(tenantCode) : undefined
+  async deleteRole(id: string) {
     return this.request<{ message?: string }>(`/rbac/roles/${id}`, {
-      method: "DELETE",
-      headers: apiKey ? { "x-api-key": apiKey } : undefined,
-      skipAuth: !!apiKey
+      method: "DELETE"
     })
   }
 
-  // Role permissions
-  async getRolePermissions(roleId: string, tenantCode?: string) {
-    const apiKey = tenantCode ? getApiKeyForTenant(tenantCode) : undefined
+  // ─── Role permissions ─────────────────────────────────────────────────────
+
+  async getRolePermissions(roleId: string) {
     return this.request<PermissionApiType[]>(`/rbac/roles/${roleId}/permissions`, {
-      method: "GET",
-      headers: apiKey ? { "x-api-key": apiKey } : undefined,
-      skipAuth: !!apiKey
+      method: "GET"
     })
   }
 
-  async assignPermissionToRole(roleId: string, permission: { moduleKey: string; operationKey: string }, tenantCode?: string) {
-    const apiKey = tenantCode ? getApiKeyForTenant(tenantCode) : undefined
+  async assignPermissionToRole(roleId: string, permission: { moduleKey: string; operationKey: string }) {
     return this.request(`/rbac/roles/${roleId}/permissions`, {
       method: "POST",
-      body: permission,
-      headers: apiKey ? { "x-api-key": apiKey } : undefined,
-      skipAuth: !!apiKey
+      body: permission
     })
   }
 
-  async assignPermissionsBulk(roleId: string, data: { permissions: { moduleKey: string; operationKey: string }[] }, tenantCode?: string) {
-    const apiKey = tenantCode ? getApiKeyForTenant(tenantCode) : undefined
+  async assignPermissionsBulk(roleId: string, data: { permissions: { moduleKey: string; operationKey: string }[] }) {
     return this.request(`/rbac/roles/${roleId}/permissions/bulk`, {
       method: "POST",
-      body: data,
-      headers: apiKey ? { "x-api-key": apiKey } : undefined,
-      skipAuth: !!apiKey
+      body: data
     })
   }
 
-  async removePermissionFromRole(roleId: string, permissionId: string, tenantCode?: string) {
-    const apiKey = tenantCode ? getApiKeyForTenant(tenantCode) : undefined
+  async removePermissionFromRole(roleId: string, permissionId: string) {
     return this.request(`/rbac/roles/${roleId}/permissions/${permissionId}`, {
-      method: "DELETE",
-      headers: apiKey ? { "x-api-key": apiKey } : undefined,
-      skipAuth: !!apiKey
+      method: "DELETE"
     })
   }
 
-  // Permissions
-  async createPermission(data: { moduleKey: string; operationKey: string }, tenantCode?: string) {
-    const apiKey = tenantCode ? getApiKeyForTenant(tenantCode) : undefined
+  // ─── Permissions ──────────────────────────────────────────────────────────
+
+  async createPermission(data: { moduleKey: string; operationKey: string }) {
     return this.request<PermissionApiType>("/rbac/permissions", {
       method: "POST",
-      body: data,
-      headers: apiKey ? { "x-api-key": apiKey } : undefined,
-      skipAuth: !!apiKey
+      body: data
     })
   }
 
-  // Modules
-  async createModule(data: { key: string; description?: string }, tenantCode?: string) {
-    const apiKey = tenantCode ? getApiKeyForTenant(tenantCode) : undefined
-    return this.request(`/rbac/modules`, {
-      method: "POST",
-      body: data,
-      headers: apiKey ? { "x-api-key": apiKey } : undefined,
-      skipAuth: !!apiKey
-    })
-  }
-
-  async getModules(tenantCode?: string) {
-    const apiKey = tenantCode ? getApiKeyForTenant(tenantCode) : undefined
-    return this.request(`/rbac/modules`, {
-      method: "GET",
-      headers: apiKey ? { "x-api-key": apiKey } : undefined,
-      skipAuth: !!apiKey
-    })
-  }
-
-  async getModuleById(id: string, tenantCode?: string) {
-    const apiKey = tenantCode ? getApiKeyForTenant(tenantCode) : undefined
-    return this.request(`/rbac/modules/${id}`, {
-      method: "GET",
-      headers: apiKey ? { "x-api-key": apiKey } : undefined,
-      skipAuth: !!apiKey
-    })
-  }
-
-  async getModuleByKey(key: string, tenantCode?: string) {
-    const apiKey = tenantCode ? getApiKeyForTenant(tenantCode) : undefined
-    return this.request(`/rbac/modules/key/${encodeURIComponent(key)}`, {
-      method: "GET",
-      headers: apiKey ? { "x-api-key": apiKey } : undefined,
-      skipAuth: !!apiKey
-    })
-  }
-
-  async updateModule(id: string, data: { key?: string; description?: string }, tenantCode?: string) {
-    const apiKey = tenantCode ? getApiKeyForTenant(tenantCode) : undefined
-    return this.request(`/rbac/modules/${id}`, {
-      method: "PUT",
-      body: data,
-      headers: apiKey ? { "x-api-key": apiKey } : undefined,
-      skipAuth: !!apiKey
-    })
-  }
-
-  async deleteModule(id: string, tenantCode?: string) {
-    const apiKey = tenantCode ? getApiKeyForTenant(tenantCode) : undefined
-    return this.request(`/rbac/modules/${id}`, {
-      method: "DELETE",
-      headers: apiKey ? { "x-api-key": apiKey } : undefined,
-      skipAuth: !!apiKey
-    })
-  }
-
-  // Operations
-  async createOperation(data: { key: string; description?: string }, tenantCode?: string) {
-    const apiKey = tenantCode ? getApiKeyForTenant(tenantCode) : undefined
-    return this.request(`/rbac/operations`, {
-      method: "POST",
-      body: data,
-      headers: apiKey ? { "x-api-key": apiKey } : undefined,
-      skipAuth: !!apiKey
-    })
-  }
-
-  async getOperations(tenantCode?: string) {
-    const apiKey = tenantCode ? getApiKeyForTenant(tenantCode) : undefined
-    return this.request(`/rbac/operations`, {
-      method: "GET",
-      headers: apiKey ? { "x-api-key": apiKey } : undefined,
-      skipAuth: !!apiKey
-    })
-  }
-
-  async getOperationById(id: string, tenantCode?: string) {
-    const apiKey = tenantCode ? getApiKeyForTenant(tenantCode) : undefined
-    return this.request(`/rbac/operations/${id}`, {
-      method: "GET",
-      headers: apiKey ? { "x-api-key": apiKey } : undefined,
-      skipAuth: !!apiKey
-    })
-  }
-
-  async getOperationByKey(key: string, tenantCode?: string) {
-    const apiKey = tenantCode ? getApiKeyForTenant(tenantCode) : undefined
-    return this.request(`/rbac/operations/key/${encodeURIComponent(key)}`, {
-      method: "GET",
-      headers: apiKey ? { "x-api-key": apiKey } : undefined,
-      skipAuth: !!apiKey
-    })
-  }
-
-  async updateOperation(id: string, data: { key?: string; description?: string }, tenantCode?: string) {
-    const apiKey = tenantCode ? getApiKeyForTenant(tenantCode) : undefined
-    return this.request(`/rbac/operations/${id}`, {
-      method: "PUT",
-      body: data,
-      headers: apiKey ? { "x-api-key": apiKey } : undefined,
-      skipAuth: !!apiKey
-    })
-  }
-
-  async deleteOperation(id: string, tenantCode?: string) {
-    const apiKey = tenantCode ? getApiKeyForTenant(tenantCode) : undefined
-    return this.request(`/rbac/operations/${id}`, {
-      method: "DELETE",
-      headers: apiKey ? { "x-api-key": apiKey } : undefined,
-      skipAuth: !!apiKey
-    })
-  }
-
-  async getPermissions(tenantCode?: string) {
-    const apiKey = tenantCode ? getApiKeyForTenant(tenantCode) : undefined
+  async getPermissions() {
     return this.request<PermissionApiType[]>("/rbac/permissions", {
-      method: "GET",
-      headers: apiKey ? { "x-api-key": apiKey } : undefined,
-      skipAuth: !!apiKey
+      method: "GET"
     })
   }
 
-  async getPermissionById(id: string, tenantCode?: string) {
-    const apiKey = tenantCode ? getApiKeyForTenant(tenantCode) : undefined
+  async getPermissionById(id: string) {
     return this.request<PermissionApiType>(`/rbac/permissions/${id}`, {
-      method: "GET",
-      headers: apiKey ? { "x-api-key": apiKey } : undefined,
-      skipAuth: !!apiKey
+      method: "GET"
     })
   }
 
-  async deletePermission(id: string, tenantCode?: string) {
-    const apiKey = tenantCode ? getApiKeyForTenant(tenantCode) : undefined
+  async deletePermission(id: string) {
     return this.request<{ message?: string }>(`/rbac/permissions/${id}`, {
-      method: "DELETE",
-      headers: apiKey ? { "x-api-key": apiKey } : undefined,
-      skipAuth: !!apiKey
+      method: "DELETE"
     })
   }
 
-  // User roles (assign/remove/list)
-  async assignRoleToUser(userId: string, roleId: string, tenantCode?: string) {
-    const apiKey = tenantCode ? getApiKeyForTenant(tenantCode) : undefined
+  // ─── Modules ──────────────────────────────────────────────────────────────
+
+  async createModule(data: { key: string; description?: string }) {
+    return this.request(`/rbac/modules`, {
+      method: "POST",
+      body: data
+    })
+  }
+
+  async getModules() {
+    return this.request(`/rbac/modules`, {
+      method: "GET"
+    })
+  }
+
+  async getModuleById(id: string) {
+    return this.request(`/rbac/modules/${id}`, {
+      method: "GET"
+    })
+  }
+
+  async getModuleByKey(key: string) {
+    return this.request(`/rbac/modules/key/${encodeURIComponent(key)}`, {
+      method: "GET"
+    })
+  }
+
+  async updateModule(id: string, data: { key?: string; description?: string }) {
+    return this.request(`/rbac/modules/${id}`, {
+      method: "PUT",
+      body: data
+    })
+  }
+
+  async deleteModule(id: string) {
+    return this.request(`/rbac/modules/${id}`, {
+      method: "DELETE"
+    })
+  }
+
+  // ─── Operations ───────────────────────────────────────────────────────────
+
+  async createOperation(data: { key: string; description?: string }) {
+    return this.request(`/rbac/operations`, {
+      method: "POST",
+      body: data
+    })
+  }
+
+  async getOperations() {
+    return this.request(`/rbac/operations`, {
+      method: "GET"
+    })
+  }
+
+  async getOperationById(id: string) {
+    return this.request(`/rbac/operations/${id}`, {
+      method: "GET"
+    })
+  }
+
+  async getOperationByKey(key: string) {
+    return this.request(`/rbac/operations/key/${encodeURIComponent(key)}`, {
+      method: "GET"
+    })
+  }
+
+  async updateOperation(id: string, data: { key?: string; description?: string }) {
+    return this.request(`/rbac/operations/${id}`, {
+      method: "PUT",
+      body: data
+    })
+  }
+
+  async deleteOperation(id: string) {
+    return this.request(`/rbac/operations/${id}`, {
+      method: "DELETE"
+    })
+  }
+
+  // ─── User roles ───────────────────────────────────────────────────────────
+
+  async assignRoleToUser(userId: string, roleId: string) {
     return this.request(`/rbac/users/${userId}/roles`, {
       method: "POST",
-      body: { roleId },
-      headers: apiKey ? { "x-api-key": apiKey } : undefined,
-      skipAuth: !!apiKey
+      body: { roleId }
     })
   }
 
-  async getUserRoles(userId: string, tenantCode?: string) {
-    const apiKey = tenantCode ? getApiKeyForTenant(tenantCode) : undefined
+  async getUserRoles(userId: string) {
     return this.request<any>(`/rbac/users/${userId}/roles`, {
-      method: "GET",
-      headers: apiKey ? { "x-api-key": apiKey } : undefined,
-      skipAuth: !!apiKey
+      method: "GET"
     })
   }
 
-  async removeRoleFromUser(userId: string, roleId: string, tenantCode?: string) {
-    const apiKey = tenantCode ? getApiKeyForTenant(tenantCode) : undefined
+  async removeRoleFromUser(userId: string, roleId: string) {
     return this.request(`/rbac/users/${userId}/roles/${roleId}`, {
-      method: "DELETE",
-      headers: apiKey ? { "x-api-key": apiKey } : undefined,
-      skipAuth: !!apiKey
+      method: "DELETE"
     })
   }
 
-  // Super Admin Credentials (master JWT only)
+  // ─── Super Admin Credentials (master JWT only) ────────────────────────────
+
   async getSuperAdminCreds(tenantCode: string) {
     return this.request<{
       tenantCode: string

@@ -24,14 +24,7 @@ export function useAuth() {
           if (accessToken && !TokenManager.isTokenExpired(accessToken)) {
             const userData = TokenManager.getUserFromToken()
             if (userData) {
-              setUser(
-                new User({
-                  id: userData.id || userData.userId,
-                  email: userData.email,
-                  name: userData.name,
-                  role: userData.role
-                })
-              )
+              setUser(buildUserFromPayload(userData))
             }
           } else if (TokenManager.getRefreshToken()) {
             // Try to refresh if access token is expired
@@ -39,14 +32,7 @@ export function useAuth() {
               await TokenManager.refreshAccessToken()
               const userData = TokenManager.getUserFromToken()
               if (userData) {
-                setUser(
-                  new User({
-                    id: userData.id || userData.userId,
-                    email: userData.email,
-                    name: userData.name,
-                    role: userData.role
-                  })
-                )
+                setUser(buildUserFromPayload(userData))
               }
             } catch (err) {
               // Refresh failed, clear tokens
@@ -76,12 +62,16 @@ export function useAuth() {
         TokenManager.setTokens(res.accessToken, res.refreshToken)
       }
 
-      const userData = new User({
-        id: res.user.id,
-        email: res.user.email,
-        name: res.user.name,
-        role: res.user.role
-      })
+      // Prefer reading identity from the JWT rather than the response body
+      const tokenPayload = TokenManager.getUserFromToken()
+      const userData = tokenPayload
+        ? buildUserFromPayload(tokenPayload)
+        : new User({
+            id: res.user?.id ?? "",
+            email: res.user?.email ?? "",
+            name: res.user?.name ?? "",
+            role: res.user?.role ?? "USER"
+          })
       setUser(userData)
       router.push("/dashboard")
     } catch (err: any) {
@@ -106,11 +96,11 @@ export function useAuth() {
     }
   }
 
-  async function forgotPassword(email: string) {
+  async function forgotPassword(email: string, tenantCode?: string) {
     setLoading(true)
     setError(null)
     try {
-      await api.forgotPassword(email)
+      await api.forgotPassword(email, tenantCode)
     } catch (err: any) {
       setError(err.message || "Failed to send reset email")
       throw err
@@ -141,14 +131,7 @@ export function useAuth() {
       if (newAccessToken) {
         const userData = TokenManager.getUserFromToken()
         if (userData) {
-          setUser(
-            new User({
-              id: userData.id || userData.userId,
-              email: userData.email,
-              name: userData.name,
-              role: userData.role
-            })
-          )
+          setUser(buildUserFromPayload(userData))
         }
       }
     } catch (err) {
@@ -163,10 +146,44 @@ export function useAuth() {
     error,
     initializing,
     isAuthenticated: TokenManager.isAuthenticated(),
+    /** Decoded JWT payload — read type/tenantCode/roles for UI decisions */
+    tokenPayload: TokenManager.getUserFromToken() as JwtPayload | null,
     login,
     register,
     forgotPassword,
     logout,
     refreshSession
   }
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+/**
+ * New JWT payload shape embedded by the backend at login.
+ * Safe to decode on the frontend for UI decisions — never for security.
+ */
+export interface JwtPayload {
+  userId: string
+  email: string
+  /** "MASTER" for super-admins, "TENANT" for tenant users */
+  type: "MASTER" | "TENANT"
+  tenantId?: string
+  tenantCode?: string
+  roles: string[]
+  iat: number
+  exp: number
+}
+
+/** Build a frontend User model from a decoded JWT payload */
+function buildUserFromPayload(payload: any): User {
+  // Derive a UserRole from the new JWT fields.
+  // "MASTER" tokens → OWNER. Tenant tokens fall back to first role or USER.
+  const derivedRole = payload.role ?? (payload.type === "MASTER" ? "OWNER" : (payload.roles?.[0]?.toUpperCase() ?? "USER"))
+
+  return new User({
+    id: payload.userId ?? payload.id ?? "",
+    email: payload.email ?? "",
+    name: payload.name ?? payload.email ?? "",
+    role: derivedRole
+  })
 }

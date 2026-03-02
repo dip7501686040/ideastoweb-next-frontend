@@ -12,7 +12,7 @@ interface UseOperationsResult {
   deleteOperation: (id: string) => Promise<void>
 }
 
-export function useOperations(tenantCode?: string): UseOperationsResult {
+export function useOperations(): UseOperationsResult {
   const [operations, setOperations] = useState<OperationApiType[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -21,7 +21,7 @@ export function useOperations(tenantCode?: string): UseOperationsResult {
     try {
       setLoading(true)
       setError(null)
-      const data = await rbacApi.getOperations(tenantCode)
+      const data = await rbacApi.getOperations()
       setOperations(data)
     } catch (err: any) {
       setError(err.message || "Failed to load operations")
@@ -29,7 +29,7 @@ export function useOperations(tenantCode?: string): UseOperationsResult {
     } finally {
       setLoading(false)
     }
-  }, [tenantCode])
+  }, [])
 
   useEffect(() => {
     fetchOperations()
@@ -39,42 +39,42 @@ export function useOperations(tenantCode?: string): UseOperationsResult {
     async (data: { key: string; description?: string }) => {
       try {
         setError(null)
-        await rbacApi.createOperation(data, tenantCode)
+        await rbacApi.createOperation(data)
         await fetchOperations()
       } catch (err: any) {
         setError(err.message || "Failed to create operation")
         throw err
       }
     },
-    [tenantCode, fetchOperations]
+    [fetchOperations]
   )
 
   const updateOperation = useCallback(
     async (id: string, data: { key?: string; description?: string }) => {
       try {
         setError(null)
-        await rbacApi.updateOperation(id, data, tenantCode)
+        await rbacApi.updateOperation(id, data)
         await fetchOperations()
       } catch (err: any) {
         setError(err.message || "Failed to update operation")
         throw err
       }
     },
-    [tenantCode, fetchOperations]
+    [fetchOperations]
   )
 
   const deleteOperation = useCallback(
     async (id: string) => {
       try {
         setError(null)
-        await rbacApi.deleteOperation(id, tenantCode)
+        await rbacApi.deleteOperation(id)
         await fetchOperations()
       } catch (err: any) {
         setError(err.message || "Failed to delete operation")
         throw err
       }
     },
-    [tenantCode, fetchOperations]
+    [fetchOperations]
   )
 
   return {
