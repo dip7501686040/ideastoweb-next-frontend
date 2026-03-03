@@ -1,5 +1,5 @@
 import { BaseApi } from "./BaseApi"
-import { Service, ApplyServiceRequest, ApplyServiceResponse, EnabledService } from "@/models/Service"
+import { Service, ApplyServiceRequest, ApplyServiceResponse, EnabledService, SyncMigrationsResponse } from "@/models/Service"
 
 export class ServiceApi extends BaseApi {
   /**
@@ -80,6 +80,18 @@ export class ServiceApi extends BaseApi {
   async removeServiceFromTenant(tenantCode: string, serviceCode: string): Promise<{ message: string }> {
     return this.request<{ message: string }>(`/services/tenant/${tenantCode}/service/${serviceCode}`, {
       method: "DELETE"
+    })
+  }
+
+  /**
+   * Sync pending migrations for a service across all tenants that have it enabled.
+   * Requires JWT only — no additional permission needed.
+   * @param serviceCode - Service code
+   * @returns Sync migrations response with per-tenant results
+   */
+  async syncMigrations(serviceCode: string): Promise<SyncMigrationsResponse> {
+    return this.request<SyncMigrationsResponse>(`/services/${serviceCode}/sync-migrations`, {
+      method: "POST"
     })
   }
 }

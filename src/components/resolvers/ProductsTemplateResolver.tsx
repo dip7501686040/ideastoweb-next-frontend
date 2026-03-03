@@ -2,39 +2,48 @@
 
 import { useRoot } from "@/providers/TenantProvider"
 import TenantProductGrid from "@/components/tenant/products/TenantProductGrid"
-import { UITemplate } from "@/models/UIService"
+import ProductsManagement from "@/components/admin/products/ProductsManagement"
+import TenantServiceGuard from "@/components/admin/TenantServiceGuard"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 
 /**
  * 🛍️ PRODUCTS TEMPLATE RESOLVER
- * Requires tenant context (redirects if on master domain)
- * Uses root context established once in root layout
+ * Single resolver for all domain contexts — follows DashboardTemplateResolver pattern.
+ *
+ * - Admin domain  → ProductsManagement wrapped in TenantServiceGuard("product")
+ * - Tenant domain → TenantProductGrid (client-facing catalog)
+ * - Master domain → redirect to home (no products context)
  */
 export default function ProductsTemplateResolver() {
-  const { tenant } = useRoot()
+  const { tenant, adminConfig } = useRoot()
   const router = useRouter()
 
   useEffect(() => {
-    // Redirect to home if no tenant detected
-    if (!tenant) {
+    // Master domain: no products context — redirect home
+    if (!adminConfig.isAdminDomain && !tenant) {
       router.push("/")
     }
-  }, [tenant, router])
+  }, [adminConfig.isAdminDomain, tenant, router])
 
-  // Don't render if no tenant
-  if (!tenant) {
-    return null
+  // ADMIN DOMAIN — full product management (CRUD)
+  if (adminConfig.isAdminDomain) {
+    return (
+      <TenantServiceGuard serviceCode="product">
+        <ProductsManagement />
+      </TenantServiceGuard>
+    )
   }
 
-  // TODO: Fetch tenant's UI service configuration from API
-  // Example: const uiConfig = await uiServiceApi.getTenantUIConfig(tenant.code, 'products')
-  const template = process.env.NEXT_PUBLIC_DEFAULT_PRODUCTS_TEMPLATE || UITemplate.PRODUCT_GRID
+  // TENANT DOMAIN — client-facing product grid
+  if (tenant) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <TenantProductGrid tenantCode={tenant.code} />
+      </div>
+    )
+  }
 
-  // Render appropriate template
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <TenantProductGrid tenantCode={tenant.code} />
-    </div>
-  )
+  // Master domain: nothing to render while redirect is in flight
+  return null
 }

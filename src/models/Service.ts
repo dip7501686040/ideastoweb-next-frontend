@@ -33,6 +33,21 @@ export type ApplyServiceResponse = {
   }>
 }
 
+export type SyncMigrationsTenantResult = {
+  tenantCode: string
+  status: "success" | "failed"
+  error?: string
+}
+
+export type SyncMigrationsResponse = {
+  message: string
+  serviceCode: string
+  totalTenants: number
+  successCount: number
+  failedCount: number
+  results: SyncMigrationsTenantResult[]
+}
+
 export type EnabledService = {
   id?: string
   code: string
