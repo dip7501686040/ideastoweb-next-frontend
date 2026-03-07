@@ -15,7 +15,12 @@ const nextConfig: NextConfig = {
 
   // Image domains for external images (if using next/image)
   images: {
-    domains: []
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com"
+      }
+    ]
   },
 
   // Headers for CORS and security

@@ -1,7 +1,7 @@
 import { TokenManager } from "@/lib/tokenManager"
 
 export type RequestOptions = {
-  method?: "GET" | "POST" | "PUT" | "DELETE"
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
   body?: any
   headers?: Record<string, string>
   skipAuth?: boolean

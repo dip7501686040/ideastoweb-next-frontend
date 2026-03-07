@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Product } from "@/models/Product"
 import { showToast, handleApiError } from "@/lib/utils"
 import { useProducts } from "@/hooks/useProducts"
+import ProductImageManager from "@/components/admin/products/ProductImageManager"
 
 /**
  * 🛍️ PRODUCTS MANAGEMENT - Tenant Admin
@@ -17,6 +18,7 @@ export default function ProductsManagement() {
   const [showForm, setShowForm] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [deletingProduct, setDeletingProduct] = useState<Product | null>(null)
+  const [imagingProduct, setImagingProduct] = useState<Product | null>(null)
 
   // ── Data ──────────────────────────────────────────────────────────────────
   const { products, loading, error, refetch, createProduct, updateProduct, deleteProduct } = useProducts()
@@ -24,13 +26,13 @@ export default function ProductsManagement() {
   const filtered = products.filter((p) => p.name.toLowerCase().includes(searchTerm.toLowerCase()))
 
   // ── Handlers ──────────────────────────────────────────────────────────────
-  const handleSaved = async (name: string, price: number) => {
+  const handleSaved = async (name: string, description: string, price: number) => {
     try {
       if (editingProduct) {
-        await updateProduct(editingProduct.id, { name, price })
+        await updateProduct(editingProduct.id, { name, description, price })
         showToast({ message: "Product updated", type: "success" })
       } else {
-        await createProduct({ name, price })
+        await createProduct({ name, description, price })
         showToast({ message: "Product created", type: "success" })
       }
       setShowForm(false)
@@ -76,6 +78,7 @@ export default function ProductsManagement() {
         />
       )}
       {deletingProduct && <DeleteModal product={deletingProduct} onClose={() => setDeletingProduct(null)} onDeleted={handleDeleted} />}
+      {imagingProduct && <ProductImageManager productId={imagingProduct.id} productName={imagingProduct.name} onClose={() => setImagingProduct(null)} />}
 
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between">
@@ -173,6 +176,9 @@ export default function ProductsManagement() {
                   <td className="px-6 py-4 text-sm text-gray-600">{product.updatedBy ?? <span className="text-gray-400">—</span>}</td>
                   <td className="px-6 py-4 text-sm text-gray-500">{product.createdAt ? new Date(product.createdAt).toLocaleDateString() : <span className="text-gray-400">—</span>}</td>
                   <td className="px-6 py-4 text-right">
+                    <button onClick={() => setImagingProduct(product)} className="text-blue-600 hover:text-blue-700 font-medium text-sm mr-4">
+                      Images
+                    </button>
                     <button onClick={() => openEdit(product)} className="text-purple-600 hover:text-purple-700 font-medium text-sm mr-4">
                       Edit
                     </button>
@@ -201,11 +207,12 @@ export default function ProductsManagement() {
 interface ProductFormModalProps {
   product: Product | null
   onClose: () => void
-  onSaved: (name: string, price: number) => Promise<void>
+  onSaved: (name: string, description: string, price: number) => Promise<void>
 }
 
 function ProductFormModal({ product, onClose, onSaved }: ProductFormModalProps) {
   const [name, setName] = useState(product?.name ?? "")
+  const [description, setDescription] = useState(product?.description ?? "")
   const [price, setPrice] = useState(product ? String(product.price) : "")
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
@@ -214,12 +221,13 @@ function ProductFormModal({ product, onClose, onSaved }: ProductFormModalProps) 
     e.preventDefault()
     const parsedPrice = parseFloat(price)
     if (!name.trim()) return setError("Product name is required.")
+    if (!description.trim()) return setError("Description is required.")
     if (isNaN(parsedPrice) || parsedPrice < 0) return setError("Enter a valid non-negative price.")
 
     setSaving(true)
     setError("")
     try {
-      await onSaved(name.trim(), parsedPrice)
+      await onSaved(name.trim(), description.trim(), parsedPrice)
     } catch (err: any) {
       setError(err.message || "Failed to save product.")
     } finally {
@@ -250,7 +258,7 @@ function ProductFormModal({ product, onClose, onSaved }: ProductFormModalProps) 
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="block w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="block w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
               placeholder="e.g. Premium Widget"
               autoFocus
               required
@@ -260,22 +268,37 @@ function ProductFormModal({ product, onClose, onSaved }: ProductFormModalProps) 
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Price (USD) <span className="text-red-500">*</span>
+              Description <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+              className="block w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900 resize-none"
+              placeholder="e.g. A premium quality widget for professional use."
+              required
+            />
+            <p className="mt-1 text-xs text-gray-400">Brief description shown to customers.</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Price (Rs) <span className="text-red-500">*</span>
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">₹</span>
               <input
                 type="number"
                 min="0"
                 step="0.01"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
-                className="block w-full border border-gray-300 rounded-lg pl-7 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="block w-full border border-gray-300 rounded-lg pl-7 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
                 placeholder="0.00"
                 required
               />
             </div>
-            <p className="mt-1 text-xs text-gray-400">Stored as float/double precision.</p>
+            <p className="mt-1 text-xs text-gray-400">Stored as float/double precision (INR).</p>
           </div>
 
           <div className="flex justify-end gap-3 pt-2">

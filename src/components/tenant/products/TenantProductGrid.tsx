@@ -1,6 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Image from "next/image"
+import { TokenManager } from "@/lib/tokenManager"
+
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 interface Product {
   id: string
@@ -8,13 +12,32 @@ interface Product {
   description: string
   price: number
   category: string
-  imageUrl?: string
+  primaryImagePublicId?: string
   inStock: boolean
+}
+
+interface ProductApiItem {
+  id: string
+  name: string
+  description?: string
+  price: number
+  category?: string
+  primaryImagePublicId?: string
+  inStock?: boolean
 }
 
 interface TenantProductGridProps {
   tenantCode: string
 }
+
+// ── Cloudinary helper ─────────────────────────────────────────────────────────
+
+function getProductThumbnail(publicId: string): string {
+  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
+  return `https://res.cloudinary.com/${cloudName}/image/upload/w_300,h_300,c_fill,q_auto,f_auto/${publicId}`
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
 
 export default function TenantProductGrid({ tenantCode }: TenantProductGridProps) {
   const [products, setProducts] = useState<Product[]>([])
@@ -30,13 +53,33 @@ export default function TenantProductGrid({ tenantCode }: TenantProductGridProps
   const fetchProducts = async () => {
     try {
       setIsLoading(true)
-      // TODO: Implement API call to fetch tenant products
-      // const response = await fetch(`/api/tenants/${tenantCode}/products`)
-      // const data = await response.json()
-      // setProducts(data)
+      setError("")
+      const token = TokenManager.getAccessToken()
+      const res = await fetch("http://localhost:8000/products", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        credentials: "include"
+      })
 
-      // Mock data for demonstration
-      setProducts([])
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error((body as any).message || "Failed to fetch products")
+      }
+
+      const json: ProductApiItem[] = await res.json()
+      const mapped: Product[] = (Array.isArray(json) ? json : []).map((p) => ({
+        id: p.id,
+        name: p.name,
+        description: p.description ?? "",
+        price: p.price,
+        category: p.category ?? "Uncategorized",
+        primaryImagePublicId: p.primaryImagePublicId,
+        inStock: p.inStock ?? true
+      }))
+      setProducts(mapped)
     } catch (err: any) {
       setError(err.message || "Failed to fetch products")
     } finally {
@@ -103,18 +146,6 @@ export default function TenantProductGrid({ tenantCode }: TenantProductGridProps
               ))}
             </select>
           </div>
-
-          <button
-            onClick={() => {
-              /* TODO: Open add product modal */
-            }}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-          >
-            <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            Add Product
-          </button>
         </div>
       </div>
 
@@ -133,27 +164,14 @@ export default function TenantProductGrid({ tenantCode }: TenantProductGridProps
           </svg>
           <h3 className="mt-2 text-sm font-medium text-gray-900">No products found</h3>
           <p className="mt-1 text-sm text-gray-500">{searchTerm || selectedCategory !== "all" ? "Try adjusting your search or filter criteria" : "Get started by adding your first product"}</p>
-          <div className="mt-6">
-            <button
-              onClick={() => {
-                /* TODO: Open add product modal */
-              }}
-              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-            >
-              <svg className="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              New Product
-            </button>
-          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredProducts.map((product) => (
             <div key={product.id} className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-              <div className="aspect-w-16 aspect-h-9 bg-gray-200">
-                {product.imageUrl ? (
-                  <img src={product.imageUrl} alt={product.name} className="w-full h-48 object-cover" />
+              <div className="relative w-full h-48 bg-gray-200">
+                {product.primaryImagePublicId ? (
+                  <Image src={getProductThumbnail(product.primaryImagePublicId)} alt={product.name} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" className="object-cover" />
                 ) : (
                   <div className="w-full h-48 flex items-center justify-center bg-gradient-to-br from-purple-100 to-purple-200">
                     <svg className="w-16 h-16 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -169,12 +187,27 @@ export default function TenantProductGrid({ tenantCode }: TenantProductGridProps
                 </div>
                 <p className="text-sm text-gray-600 mb-3 line-clamp-2">{product.description}</p>
                 <div className="flex items-center justify-between">
-                  <span className="text-2xl font-bold text-purple-600">${product.price}</span>
+                  <span className="text-2xl font-bold text-purple-600">₹{product.price}</span>
                   <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">{product.category}</span>
                 </div>
                 <div className="mt-4 flex gap-2">
-                  <button className="flex-1 bg-purple-600 text-white py-2 px-3 rounded-md text-sm font-medium hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500">Edit</button>
-                  <button className="bg-gray-100 text-gray-700 py-2 px-3 rounded-md text-sm font-medium hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500">Delete</button>
+                  <button className="flex-1 inline-flex items-center justify-center gap-1.5 bg-purple-600 text-white py-2 px-3 rounded-md text-sm font-medium hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                      />
+                    </svg>
+                    Add to Cart
+                  </button>
+                  <button className="inline-flex items-center justify-center gap-1.5 bg-gray-900 text-white py-2 px-3 rounded-md text-sm font-medium hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Buy Now
+                  </button>
                 </div>
               </div>
             </div>
