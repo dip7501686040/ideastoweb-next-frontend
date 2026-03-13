@@ -1,30 +1,13 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Image from "next/image"
-import { TokenManager } from "@/lib/tokenManager"
+import { useRouter } from "next/navigation"
+import { productApi } from "@/api/ProductApi"
+import { cartApi } from "@/api/CartApi"
+import type { Product } from "@/models/Product"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-
-interface Product {
-  id: string
-  name: string
-  description: string
-  price: number
-  category: string
-  primaryImagePublicId?: string
-  inStock: boolean
-}
-
-interface ProductApiItem {
-  id: string
-  name: string
-  description?: string
-  price: number
-  category?: string
-  primaryImagePublicId?: string
-  inStock?: boolean
-}
 
 interface TenantProductGridProps {
   tenantCode: string
@@ -39,47 +22,71 @@ function getProductThumbnail(publicId: string): string {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
+interface Notification {
+  productName: string
+}
+
 export default function TenantProductGrid({ tenantCode }: TenantProductGridProps) {
+  const router = useRouter()
   const [products, setProducts] = useState<Product[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<string>("all")
+  const [addingCartId, setAddingCartId] = useState<string | null>(null)
+  const [buyingNowId, setBuyingNowId] = useState<string | null>(null)
+  const [notification, setNotification] = useState<Notification | null>(null)
+  const notifTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     fetchProducts()
   }, [])
 
+  const showNotification = (productName: string) => {
+    if (notifTimerRef.current) clearTimeout(notifTimerRef.current)
+    setNotification({ productName })
+    notifTimerRef.current = setTimeout(() => setNotification(null), 4000)
+  }
+
+  const handleAddToCart = async (product: Product) => {
+    try {
+      setAddingCartId(product.id)
+      await cartApi.addItem({
+        itemType: "product",
+        itemId: product.id,
+        quantity: 1,
+        price: product.price
+      })
+      showNotification(product.name)
+    } catch (err: any) {
+      setError(err.message || "Failed to add item to cart")
+    } finally {
+      setAddingCartId(null)
+    }
+  }
+
+  const handleBuyNow = async (product: Product) => {
+    try {
+      setBuyingNowId(product.id)
+      const { cartId } = await cartApi.buyNow({
+        itemType: "product",
+        itemId: product.id,
+        quantity: 1,
+        price: product.price
+      })
+      router.push(`/checkout?cartId=${cartId}`)
+    } catch (err: any) {
+      setError(err.message || "Failed to start checkout")
+      setBuyingNowId(null)
+    }
+  }
+
   const fetchProducts = async () => {
     try {
       setIsLoading(true)
       setError("")
-      const token = TokenManager.getAccessToken()
-      const res = await fetch("http://localhost:8000/products", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
-        credentials: "include"
-      })
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}))
-        throw new Error((body as any).message || "Failed to fetch products")
-      }
-
-      const json: ProductApiItem[] = await res.json()
-      const mapped: Product[] = (Array.isArray(json) ? json : []).map((p) => ({
-        id: p.id,
-        name: p.name,
-        description: p.description ?? "",
-        price: p.price,
-        category: p.category ?? "Uncategorized",
-        primaryImagePublicId: p.primaryImagePublicId,
-        inStock: p.inStock ?? true
-      }))
-      setProducts(mapped)
+      const products = await productApi.getProducts()
+      setProducts(products)
     } catch (err: any) {
       setError(err.message || "Failed to fetch products")
     } finally {
@@ -149,6 +156,43 @@ export default function TenantProductGrid({ tenantCode }: TenantProductGridProps
         </div>
       </div>
 
+      {/* Add-to-Cart Notification */}
+      {notification && (
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-4 bg-white/70 backdrop-blur-md border border-green-200/60 shadow-lg rounded-lg px-5 py-4">
+          <svg className="w-5 h-5 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          <span className="text-sm text-gray-800 font-medium">
+            <span className="text-green-700">{notification.productName}</span> added to cart
+          </span>
+          <div className="flex gap-2 ml-2">
+            <button
+              onClick={() => {
+                setNotification(null)
+                router.push("/cart")
+              }}
+              className="text-xs font-semibold text-purple-600 hover:underline"
+            >
+              View Cart
+            </button>
+            <button
+              onClick={() => {
+                setNotification(null)
+                router.push("/checkout")
+              }}
+              className="text-xs font-semibold text-gray-900 hover:underline"
+            >
+              Checkout
+            </button>
+          </div>
+          <button onClick={() => setNotification(null)} className="ml-1 text-gray-400 hover:text-gray-600">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
+
       {/* Error Message */}
       {error && <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6">{error}</div>}
 
@@ -191,22 +235,44 @@ export default function TenantProductGrid({ tenantCode }: TenantProductGridProps
                   <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">{product.category}</span>
                 </div>
                 <div className="mt-4 flex gap-2">
-                  <button className="flex-1 inline-flex items-center justify-center gap-1.5 bg-purple-600 text-white py-2 px-3 rounded-md text-sm font-medium hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-                      />
-                    </svg>
-                    Add to Cart
+                  <button
+                    onClick={() => handleAddToCart(product)}
+                    disabled={addingCartId === product.id || buyingNowId === product.id || !product.inStock}
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 bg-purple-600 text-white py-2 px-3 rounded-md text-sm font-medium hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {addingCartId === product.id ? (
+                      <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 100 16v-4l-3 3 3 3v-4a8 8 0 01-8-8z" />
+                      </svg>
+                    ) : (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                        />
+                      </svg>
+                    )}
+                    {addingCartId === product.id ? "Adding..." : "Add to Cart"}
                   </button>
-                  <button className="inline-flex items-center justify-center gap-1.5 bg-gray-900 text-white py-2 px-3 rounded-md text-sm font-medium hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                    Buy Now
+                  <button
+                    onClick={() => handleBuyNow(product)}
+                    disabled={addingCartId === product.id || buyingNowId === product.id || !product.inStock}
+                    className="inline-flex items-center justify-center gap-1.5 bg-gray-900 text-white py-2 px-3 rounded-md text-sm font-medium hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {buyingNowId === product.id ? (
+                      <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 100 16v-4l-3 3 3 3v-4a8 8 0 01-8-8z" />
+                      </svg>
+                    ) : (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    )}
+                    {buyingNowId === product.id ? "Redirecting..." : "Buy Now"}
                   </button>
                 </div>
               </div>

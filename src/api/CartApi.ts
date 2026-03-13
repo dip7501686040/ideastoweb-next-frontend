@@ -1,5 +1,5 @@
 import { BaseApi } from "./BaseApi"
-import { Cart, CartApiType, CartItem, CartItemApiType, AddCartItemRequest, UpdateCartItemRequest } from "@/models/Cart"
+import { Cart, CartApiType, CartItem, CartItemApiType, CartItemType, AddCartItemRequest, UpdateCartItemRequest } from "@/models/Cart"
 
 /**
  * Cart API client.
@@ -44,6 +44,17 @@ export class CartApi extends BaseApi {
   async clearCart(): Promise<{ message: string }> {
     return this.request<{ message: string }>("/cart", {
       method: "DELETE"
+    })
+  }
+
+  /**
+   * Buy Now — creates a temporary cart with a single item and returns its cartId.
+   * The caller should redirect to /checkout?cartId=...
+   */
+  async buyNow(data: { itemType: CartItemType; itemId: string; quantity: number; price: number }): Promise<{ cartId: string }> {
+    return this.request<{ cartId: string }>("/cart/buy-now", {
+      method: "POST",
+      body: data
     })
   }
 }

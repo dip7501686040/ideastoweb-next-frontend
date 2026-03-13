@@ -6,6 +6,9 @@ export type ProductApiType = {
   name: string
   description: string
   price: number
+  category?: string
+  primaryImagePublicId?: string
+  inStock?: boolean
   createdBy?: string | null
   updatedBy?: string | null
   createdAt?: string
@@ -28,14 +31,32 @@ export class Product extends BaseModel {
   public readonly name: string
   public readonly description: string
   public readonly price: number
+  public readonly category: string
+  public readonly primaryImagePublicId: string | undefined
+  public readonly inStock: boolean
   public readonly createdBy: string | null
   public readonly updatedBy: string | null
 
-  constructor(props: { id: string; name: string; description: string; price: number; createdBy?: string | null; updatedBy?: string | null; createdAt?: string; updatedAt?: string }) {
+  constructor(props: {
+    id: string
+    name: string
+    description: string
+    price: number
+    category?: string
+    primaryImagePublicId?: string
+    inStock?: boolean
+    createdBy?: string | null
+    updatedBy?: string | null
+    createdAt?: string
+    updatedAt?: string
+  }) {
     super({ id: props.id, createdAt: props.createdAt, updatedAt: props.updatedAt })
     this.name = props.name
     this.description = props.description
     this.price = props.price
+    this.category = props.category ?? "Uncategorized"
+    this.primaryImagePublicId = props.primaryImagePublicId
+    this.inStock = props.inStock ?? true
     this.createdBy = props.createdBy ?? null
     this.updatedBy = props.updatedBy ?? null
   }
@@ -51,6 +72,9 @@ export class Product extends BaseModel {
       name: data.name,
       description: data.description,
       price: data.price,
+      category: data.category,
+      primaryImagePublicId: data.primaryImagePublicId,
+      inStock: data.inStock,
       createdBy: data.createdBy,
       updatedBy: data.updatedBy,
       createdAt: data.createdAt,
