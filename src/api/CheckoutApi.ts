@@ -2,6 +2,10 @@ import { BaseApi } from "./BaseApi"
 
 export type CheckoutRequest = {
   cartId: string
+  referenceType: string
+  shippingAddress: string
+  phone: string
+  currency: string
 }
 
 export type CheckoutResponse = {

@@ -7,7 +7,8 @@ export type OrderItemApiType = {
   itemType: string
   itemId: string
   quantity: number
-  price: number
+  unitPrice: number
+  total: number
   metadata?: Record<string, any>
 }
 
@@ -50,7 +51,7 @@ export class OrderItem {
   }
 
   static fromApi(data: OrderItemApiType): OrderItem {
-    return new OrderItem(data)
+    return new OrderItem({ ...data, price: data.unitPrice })
   }
 }
 

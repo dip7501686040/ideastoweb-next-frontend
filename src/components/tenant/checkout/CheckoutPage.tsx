@@ -15,15 +15,26 @@ export default function CheckoutPage() {
   const { cart, loading, error, refetch } = useCart()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [checkoutError, setCheckoutError] = useState<string | null>(null)
+  const [shippingAddress, setShippingAddress] = useState("")
+  const [phone, setPhone] = useState("")
+  const [currency, setCurrency] = useState("inr")
   const router = useRouter()
 
   const handleCheckout = async () => {
     if (!cart || cart.isEmpty()) return
+    if (!shippingAddress.trim()) {
+      setCheckoutError("Shipping address is required.")
+      return
+    }
+    if (!phone.trim()) {
+      setCheckoutError("Phone number is required.")
+      return
+    }
 
     try {
       setIsSubmitting(true)
       setCheckoutError(null)
-      const result = await checkoutApi.checkout({ cartId: cart.id })
+      const result = await checkoutApi.checkout({ cartId: cart.id, referenceType: "order", shippingAddress, phone, currency })
       // Navigate to payment page with the clientSecret
       router.push(`/payment?clientSecret=${encodeURIComponent(result.clientSecret)}&paymentId=${result.paymentId}`)
     } catch (err: any) {
@@ -89,26 +100,72 @@ export default function CheckoutPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        {/* Order Review */}
-        <div className="lg:col-span-3 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-100">
-            <h2 className="font-semibold text-gray-900">Order Review</h2>
-          </div>
-          <div className="divide-y divide-gray-100">
-            {cart.items.map((item) => (
-              <div key={item.id} className="px-6 py-4 flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold flex-shrink-0">{item.itemType === "product" ? "P" : "B"}</div>
-                  <div>
-                    <p className="font-medium text-gray-900 text-sm">{item.name || item.metadata?.name || item.itemId}</p>
-                    <p className="text-xs text-gray-400 capitalize">
-                      {item.itemType} × {item.quantity}
-                    </p>
-                  </div>
-                </div>
-                <span className="font-semibold text-gray-900">${item.getSubtotal().toFixed(2)}</span>
+        {/* Shipping Details */}
+        <div className="lg:col-span-3 space-y-6">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100">
+              <h2 className="font-semibold text-gray-900">Shipping Details</h2>
+            </div>
+            <div className="px-6 py-5 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Shipping Address</label>
+                <textarea
+                  rows={3}
+                  value={shippingAddress}
+                  onChange={(e) => setShippingAddress(e.target.value)}
+                  placeholder="123 Main St, Kolkata, West Bengal, 700001"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                />
               </div>
-            ))}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="+919876543210"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
+                  <select
+                    value={currency}
+                    onChange={(e) => setCurrency(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white"
+                  >
+                    <option value="inr">INR – Indian Rupee</option>
+                    <option value="usd">USD – US Dollar</option>
+                    <option value="eur">EUR – Euro</option>
+                    <option value="gbp">GBP – British Pound</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Order Review */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100">
+              <h2 className="font-semibold text-gray-900">Order Review</h2>
+            </div>
+            <div className="divide-y divide-gray-100">
+              {cart.items.map((item) => (
+                <div key={item.id} className="px-6 py-4 flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold flex-shrink-0">{item.itemType === "product" ? "P" : "B"}</div>
+                    <div>
+                      <p className="font-medium text-gray-900 text-sm">{item.name || item.metadata?.name || item.itemId}</p>
+                      <p className="text-xs text-gray-400 capitalize">
+                        {item.itemType} × {item.quantity}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="font-semibold text-gray-900">${item.getSubtotal().toFixed(2)}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 

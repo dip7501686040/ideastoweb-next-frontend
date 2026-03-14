@@ -1,4 +1,5 @@
 import { ReactNode } from "react"
+import TenantHeader from "./TenantHeader"
 
 interface TenantLayoutProps {
   children: ReactNode
@@ -10,5 +11,10 @@ interface TenantLayoutProps {
  * Note: Tenant context is available via useRoot() hook in client components
  */
 export default function TenantLayout({ children }: TenantLayoutProps) {
-  return <article>{children}</article>
+  return (
+    <>
+      <TenantHeader />
+      <article>{children}</article>
+    </>
+  )
 }
