@@ -46,12 +46,6 @@ export default function TenantHeader() {
             >
               Orders
             </Link>
-            <Link
-              href="/settings"
-              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-sm font-medium rounded-lg transition-all shadow-md hover:shadow-lg"
-            >
-              Settings
-            </Link>
             <button onClick={logout} className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors cursor-pointer shadow-md hover:shadow-lg">
               Logout
             </button>
