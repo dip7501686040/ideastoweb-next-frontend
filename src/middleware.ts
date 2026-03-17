@@ -12,8 +12,12 @@ export function middleware(request: NextRequest) {
   const hostname = request.headers.get("host") || ""
 
   // 🔐 AUTHENTICATION CHECK
-  const token = request.cookies.get("accessToken")?.value
-  const isAuthenticated = !!token
+  // A valid refresh token is sufficient to consider the user authenticated at the
+  // routing level — the client-side code will transparently obtain a new access
+  // token on the first API call (via the 401-retry flow in BaseApi).
+  const accessToken = request.cookies.get("accessToken")?.value
+  const refreshToken = request.cookies.get("refreshToken")?.value
+  const isAuthenticated = !!accessToken || !!refreshToken
 
   // 🔧 ADMIN SUBDOMAIN DETECTION (admin.myapp.com or admin.tenant.myapp.com)
   const adminConfig = getAdminConfig(hostname)

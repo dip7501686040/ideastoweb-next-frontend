@@ -41,6 +41,12 @@ export default function TenantHeader() {
               Products
             </Link>
             <Link
+              href="/bookings"
+              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-sm font-medium rounded-lg transition-all shadow-md hover:shadow-lg"
+            >
+              Bookings
+            </Link>
+            <Link
               href="/orders"
               className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-sm font-medium rounded-lg transition-all shadow-md hover:shadow-lg"
             >
