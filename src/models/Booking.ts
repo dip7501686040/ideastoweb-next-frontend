@@ -4,12 +4,10 @@ export type BookingStatus = "PENDING" | "CONFIRMED" | "CANCELLED"
 
 export type BookingApiType = {
   id: string
-  serviceType: string
-  resourceId: string
+  serviceProviderId: string
   startTime: string
   endTime: string
-  price: number
-  currency: string
+  amount: number
   quantity: number
   status: BookingStatus
   notes?: string
@@ -20,12 +18,10 @@ export type BookingApiType = {
 }
 
 export type CreateBookingRequest = {
-  serviceType: string
-  resourceId: string
+  serviceProviderId: string
   startTime: string
   endTime: string
-  price: number
-  currency: string
+  amount: number
   quantity: number
   notes?: string
   metadata?: Record<string, any>
@@ -39,12 +35,10 @@ export type UpdateBookingRequest = {
 }
 
 export class Booking extends BaseModel {
-  public readonly serviceType: string
-  public readonly resourceId: string
+  public readonly serviceProviderId: string
   public readonly startTime: Date
   public readonly endTime: Date
-  public readonly price: number
-  public readonly currency: string
+  public readonly amount: number
   public readonly quantity: number
   public readonly status: BookingStatus
   public readonly notes: string | null
@@ -53,12 +47,10 @@ export class Booking extends BaseModel {
 
   constructor(props: {
     id: string
-    serviceType: string
-    resourceId: string
+    serviceProviderId: string
     startTime: string | Date
     endTime: string | Date
-    price: number
-    currency: string
+    amount: number
     quantity: number
     status: BookingStatus
     notes?: string | null
@@ -68,12 +60,10 @@ export class Booking extends BaseModel {
     updatedAt?: string
   }) {
     super({ id: props.id, createdAt: props.createdAt, updatedAt: props.updatedAt })
-    this.serviceType = props.serviceType
-    this.resourceId = props.resourceId
+    this.serviceProviderId = props.serviceProviderId
     this.startTime = new Date(props.startTime)
     this.endTime = new Date(props.endTime)
-    this.price = props.price
-    this.currency = props.currency
+    this.amount = props.amount
     this.quantity = props.quantity
     this.status = props.status
     this.notes = props.notes ?? null
@@ -81,8 +71,8 @@ export class Booking extends BaseModel {
     this.userId = props.userId ?? null
   }
 
-  getFormattedPrice(): string {
-    return `${this.currency.toUpperCase()} ${this.price.toFixed(2)}`
+  getFormattedAmount(): string {
+    return `$${this.amount.toFixed(2)}`
   }
 
   getStatusLabel(): string {
@@ -100,12 +90,10 @@ export class Booking extends BaseModel {
   static fromApi(data: BookingApiType): Booking {
     return new Booking({
       id: data.id,
-      serviceType: data.serviceType,
-      resourceId: data.resourceId,
+      serviceProviderId: data.serviceProviderId,
       startTime: data.startTime,
       endTime: data.endTime,
-      price: data.price,
-      currency: data.currency,
+      amount: data.amount,
       quantity: data.quantity,
       status: data.status,
       notes: data.notes,

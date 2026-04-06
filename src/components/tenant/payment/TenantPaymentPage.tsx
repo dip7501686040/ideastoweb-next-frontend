@@ -12,6 +12,8 @@ import Link from "next/link"
 export default function TenantPaymentPage() {
   const params = useSearchParams()
   const clientSecret = params.get("clientSecret")
+  const redirectTo = params.get("redirectTo")
+  const backHref = redirectTo && redirectTo.startsWith("/") ? redirectTo.split("?")[0] : "/checkout"
 
   if (!clientSecret) {
     return (
@@ -22,8 +24,8 @@ export default function TenantPaymentPage() {
           </svg>
           <h2 className="text-lg font-semibold text-gray-900 mb-2">Missing Payment Session</h2>
           <p className="text-sm text-gray-500 mb-4">No payment session found. Please start from checkout.</p>
-          <Link href="/checkout" className="inline-block px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700">
-            Back to Checkout
+          <Link href={backHref} className="inline-block px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700">
+            Back
           </Link>
         </div>
       </div>
@@ -35,11 +37,11 @@ export default function TenantPaymentPage() {
       <div className="max-w-lg mx-auto px-4 py-12">
         {/* Header */}
         <div className="mb-8">
-          <Link href="/checkout" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 mb-4">
+          <Link href={backHref} className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 mb-4">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
-            Back to Checkout
+            Back
           </Link>
           <h1 className="text-2xl font-bold text-gray-900">Complete Payment</h1>
           <p className="text-gray-500 mt-1 text-sm">Your payment is secured by Stripe.</p>

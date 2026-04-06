@@ -2,16 +2,17 @@
 
 import { useRoot } from "@/providers/TenantProvider"
 import BookingListPage from "@/components/tenant/bookings/BookingListPage"
-import BookingsManagement from "@/components/admin/bookings/BookingsManagement"
+import BookingSetupManagement from "@/components/admin/bookings/BookingSetupManagement"
 import TenantServiceGuard from "@/components/admin/TenantServiceGuard"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 
 /**
  * BOOKINGS TEMPLATE RESOLVER
- * - Admin domain  → BookingsManagement (all bookings across users)
- * - Tenant domain → BookingListPage (my bookings + create)
- * - Master domain → redirect home
+ * - Admin domain + tenant admin → BookingSetupManagement (service types & providers)
+ * - Admin domain + master admin → BookingsManagement (all bookings across users)
+ * - Tenant domain               → BookingListPage (my bookings + create)
+ * - Master domain               → redirect home
  */
 export default function BookingsTemplateResolver() {
   const { tenant, adminConfig } = useRoot()
@@ -23,10 +24,10 @@ export default function BookingsTemplateResolver() {
     }
   }, [adminConfig.isAdminDomain, tenant, router])
 
-  if (adminConfig.isAdminDomain) {
+  if (adminConfig.isAdminDomain && adminConfig.isTenantAdmin) {
     return (
       <TenantServiceGuard serviceCode="booking">
-        <BookingsManagement />
+        <BookingSetupManagement />
       </TenantServiceGuard>
     )
   }

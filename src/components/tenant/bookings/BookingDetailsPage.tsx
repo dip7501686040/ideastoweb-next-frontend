@@ -115,16 +115,18 @@ export default function BookingDetailsPage({ bookingId }: BookingDetailsPageProp
       {/* Booking Card */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
-          <h1 className="text-xl font-bold text-gray-900 capitalize">{booking.serviceType} Booking</h1>
+          <h1 className="text-xl font-bold text-gray-900">{booking.metadata?.guestName ?? "Booking"}</h1>
           <span className={`text-sm font-medium px-3 py-1 rounded-full border ${STATUS_COLORS[booking.status] || "bg-gray-100 text-gray-600 border-gray-200"}`}>{booking.getStatusLabel()}</span>
         </div>
 
         <div className="px-6 py-5 grid grid-cols-1 sm:grid-cols-2 gap-5">
           <InfoRow label="Booking ID" value={<span className="font-mono text-xs text-gray-500">{booking.id}</span>} />
-          <InfoRow label="Resource" value={booking.resourceId} />
+          <InfoRow label="Provider" value={<span className="font-mono text-xs text-gray-500">{booking.serviceProviderId}</span>} />
+          <InfoRow label="Guest Name" value={booking.metadata?.guestName ?? "—"} />
+          {booking.metadata?.address && <InfoRow label="Address" value={String(booking.metadata.address)} />}
           <InfoRow label="Start" value={`${booking.startTime.toLocaleDateString()} ${booking.startTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`} />
           <InfoRow label="End" value={`${booking.endTime.toLocaleDateString()} ${booking.endTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`} />
-          <InfoRow label="Price" value={<span className="font-bold text-purple-600">{booking.getFormattedPrice()}</span>} />
+          <InfoRow label="Amount" value={<span className="font-bold text-purple-600">{booking.getFormattedAmount()}</span>} />
           <InfoRow label="Quantity" value={String(booking.quantity)} />
           {booking.notes && <InfoRow label="Notes" value={booking.notes} />}
           {booking.createdAt && <InfoRow label="Created" value={booking.createdAt.toLocaleDateString()} />}

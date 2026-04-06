@@ -85,7 +85,7 @@ export default function AdminBookingDetail({ bookingId }: AdminBookingDetailProp
             </svg>
             All Bookings
           </Link>
-          <h1 className="text-2xl font-bold text-gray-900 capitalize">{booking.serviceType} Booking</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{booking.metadata?.guestName ?? "Booking"}</h1>
         </div>
         <span className={`text-sm font-medium px-3 py-1.5 rounded-full border ${STATUS_COLORS[booking.status] || "bg-gray-100 text-gray-600 border-gray-200"}`}>{booking.getStatusLabel()}</span>
       </div>
@@ -98,11 +98,11 @@ export default function AdminBookingDetail({ bookingId }: AdminBookingDetailProp
         <div className="px-6 py-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           <InfoItem label="Booking ID" value={<span className="font-mono text-xs">{booking.id}</span>} />
           <InfoItem label="User ID" value={<span className="font-mono text-xs">{booking.userId || "—"}</span>} />
-          <InfoItem label="Resource ID" value={booking.resourceId} />
-          <InfoItem label="Service Type" value={<span className="capitalize">{booking.serviceType}</span>} />
+          <InfoItem label="Service Provider ID" value={<span className="font-mono text-xs">{booking.serviceProviderId}</span>} />
+          <InfoItem label="Guest Name" value={booking.metadata?.guestName ?? "—"} />
           <InfoItem label="Start Time" value={`${booking.startTime.toLocaleDateString()} ${booking.startTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`} />
           <InfoItem label="End Time" value={`${booking.endTime.toLocaleDateString()} ${booking.endTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`} />
-          <InfoItem label="Price" value={<span className="font-bold text-purple-600">{booking.getFormattedPrice()}</span>} />
+          <InfoItem label="Amount" value={<span className="font-bold text-purple-600">{booking.getFormattedAmount()}</span>} />
           <InfoItem label="Quantity" value={String(booking.quantity)} />
           <InfoItem label="Created" value={booking.createdAt ? booking.createdAt.toLocaleDateString() : "—"} />
           {booking.notes && <InfoItem label="Notes" value={booking.notes} />}

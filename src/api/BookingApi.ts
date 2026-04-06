@@ -1,5 +1,7 @@
 import { BaseApi } from "./BaseApi"
 import { Booking, BookingApiType, CreateBookingRequest, UpdateBookingRequest } from "@/models/Booking"
+import { ServiceType, ServiceTypeApiType, CreateServiceTypeRequest, UpdateServiceTypeRequest } from "@/models/ServiceType"
+import { ServiceProvider, ServiceProviderApiType, CreateServiceProviderRequest, UpdateServiceProviderRequest } from "@/models/ServiceProvider"
 
 /**
  * Booking API client.
@@ -52,6 +54,96 @@ export class BookingApi extends BaseApi {
   /** Cancel a booking */
   async cancelBooking(id: string): Promise<{ message: string; id: string }> {
     return this.request<{ message: string; id: string }>(`/bookings/${id}`, {
+      method: "DELETE"
+    })
+  }
+
+  // ──────────────────────────────────────────────
+  // Service Types
+  // ──────────────────────────────────────────────
+
+  /** Get all service types */
+  async getServiceTypes(): Promise<ServiceType[]> {
+    const response = await this.request<ServiceTypeApiType[]>("/bookings/service-types", {
+      method: "GET"
+    })
+    return response.map(ServiceType.fromApi)
+  }
+
+  /** Create a new service type */
+  async createServiceType(data: CreateServiceTypeRequest): Promise<ServiceType> {
+    const response = await this.request<ServiceTypeApiType>("/bookings/service-types", {
+      method: "POST",
+      body: data
+    })
+    return ServiceType.fromApi(response)
+  }
+
+  /** Update an existing service type */
+  async updateServiceType(id: string, data: UpdateServiceTypeRequest): Promise<ServiceType> {
+    const response = await this.request<ServiceTypeApiType>(`/bookings/service-types/${id}`, {
+      method: "PUT",
+      body: data
+    })
+    return ServiceType.fromApi(response)
+  }
+
+  /** Delete a service type */
+  async deleteServiceType(id: string): Promise<void> {
+    await this.request<void>(`/bookings/service-types/${id}`, {
+      method: "DELETE"
+    })
+  }
+
+  // ──────────────────────────────────────────────
+  // Service Providers
+  // ──────────────────────────────────────────────
+
+  /** Get all service providers */
+  async getServiceProviders(): Promise<ServiceProvider[]> {
+    const response = await this.request<ServiceProviderApiType[]>("/bookings/service-providers", {
+      method: "GET"
+    })
+    return response.map(ServiceProvider.fromApi)
+  }
+
+  /** Get a single service provider by ID */
+  async getServiceProviderById(id: string): Promise<ServiceProvider> {
+    const response = await this.request<ServiceProviderApiType>(`/bookings/service-providers/${id}`, {
+      method: "GET"
+    })
+    return ServiceProvider.fromApi(response)
+  }
+
+  /** Get a single service type by ID */
+  async getServiceTypeById(id: string): Promise<ServiceType> {
+    const response = await this.request<ServiceTypeApiType>(`/bookings/service-types/${id}`, {
+      method: "GET"
+    })
+    return ServiceType.fromApi(response)
+  }
+
+  /** Create a new service provider */
+  async createServiceProvider(data: CreateServiceProviderRequest): Promise<ServiceProvider> {
+    const response = await this.request<ServiceProviderApiType>("/bookings/service-providers", {
+      method: "POST",
+      body: data
+    })
+    return ServiceProvider.fromApi(response)
+  }
+
+  /** Update an existing service provider */
+  async updateServiceProvider(id: string, data: UpdateServiceProviderRequest): Promise<ServiceProvider> {
+    const response = await this.request<ServiceProviderApiType>(`/bookings/service-providers/${id}`, {
+      method: "PUT",
+      body: data
+    })
+    return ServiceProvider.fromApi(response)
+  }
+
+  /** Delete a service provider */
+  async deleteServiceProvider(id: string): Promise<void> {
+    await this.request<void>(`/bookings/service-providers/${id}`, {
       method: "DELETE"
     })
   }

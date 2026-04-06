@@ -21,7 +21,8 @@ export default function BookingsManagement() {
   const [statusFilter, setStatusFilter] = useState<string>("all")
 
   const filtered = bookings.filter((b) => {
-    const matchesSearch = b.serviceType.toLowerCase().includes(searchTerm.toLowerCase()) || b.resourceId.toLowerCase().includes(searchTerm.toLowerCase()) || b.id.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesSearch =
+      b.serviceProviderId.toLowerCase().includes(searchTerm.toLowerCase()) || (b.metadata?.guestName ?? "").toLowerCase().includes(searchTerm.toLowerCase()) || b.id.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = statusFilter === "all" || b.status === statusFilter
     return matchesSearch && matchesStatus
   })
@@ -72,7 +73,7 @@ export default function BookingsManagement() {
           </svg>
           <input
             type="text"
-            placeholder="Search by service type, resource, or ID…"
+            placeholder="Search by provider ID, guest name, or booking ID…"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
@@ -109,9 +110,9 @@ export default function BookingsManagement() {
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Booking</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Service</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Provider</th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Schedule</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Price</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Amount</th>
                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
                 <th className="px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
               </tr>
@@ -120,14 +121,12 @@ export default function BookingsManagement() {
               {filtered.map((booking) => (
                 <tr key={booking.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4">
-                    <div>
-                      <p className="font-mono text-xs text-gray-500">{booking.id.slice(0, 12)}…</p>
-                      {booking.userId && <p className="text-xs text-gray-400 mt-0.5">User: {booking.userId.slice(0, 8)}…</p>}
-                    </div>
+                    <p className="font-mono text-xs text-gray-500">{booking.serviceProviderId.slice(0, 12)}…</p>
+                    {booking.userId && <p className="text-xs text-gray-400 mt-0.5">User: {booking.userId.slice(0, 8)}…</p>}
                   </td>
                   <td className="px-6 py-4">
-                    <p className="font-medium text-gray-900 capitalize">{booking.serviceType}</p>
-                    <p className="text-xs text-gray-400">{booking.resourceId}</p>
+                    <p className="font-medium text-gray-900">{booking.metadata?.guestName ?? "—"}</p>
+                    <p className="text-xs text-gray-400 font-mono">{booking.serviceProviderId.slice(0, 8)}…</p>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-600">
                     <p>{booking.startTime.toLocaleDateString()}</p>
@@ -136,7 +135,7 @@ export default function BookingsManagement() {
                     </p>
                   </td>
                   <td className="px-6 py-4">
-                    <span className="font-semibold text-purple-600">{booking.getFormattedPrice()}</span>
+                    <span className="font-semibold text-purple-600">{booking.getFormattedAmount()}</span>
                     <p className="text-xs text-gray-400">× {booking.quantity}</p>
                   </td>
                   <td className="px-6 py-4">

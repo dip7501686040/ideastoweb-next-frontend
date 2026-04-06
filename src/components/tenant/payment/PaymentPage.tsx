@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useStripe, useElements, PaymentElement } from "@stripe/react-stripe-js"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 
 interface PaymentFormProps {
   onSuccess?: () => void
@@ -16,8 +16,12 @@ export default function PaymentForm({ onSuccess }: PaymentFormProps) {
   const stripe = useStripe()
   const elements = useElements()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [isProcessing, setIsProcessing] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  const redirectTo = searchParams.get("redirectTo")
+  const successRedirectPath = redirectTo && redirectTo.startsWith("/") ? redirectTo : "/orders?success=true"
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -29,7 +33,7 @@ export default function PaymentForm({ onSuccess }: PaymentFormProps) {
     const { error } = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        return_url: `${window.location.origin}/orders?success=true`
+        return_url: new URL(successRedirectPath, window.location.origin).toString()
       },
       redirect: "if_required"
     })
@@ -44,7 +48,7 @@ export default function PaymentForm({ onSuccess }: PaymentFormProps) {
     if (onSuccess) {
       onSuccess()
     } else {
-      router.push("/orders?success=true")
+      router.push(successRedirectPath)
     }
   }
 
