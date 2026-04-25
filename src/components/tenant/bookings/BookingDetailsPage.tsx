@@ -49,9 +49,8 @@ export default function BookingDetailsPage({ bookingId }: BookingDetailsPageProp
         itemType: "booking",
         itemId: booking.id,
         quantity: booking.quantity,
-        price: booking.price,
+        price: booking.amount,
         metadata: {
-          serviceType: booking.serviceType,
           startTime: booking.startTime.toISOString(),
           endTime: booking.endTime.toISOString()
         }

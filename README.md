@@ -77,7 +77,7 @@ cp .env.example .env.local
 Edit `.env.local`:
 ```env
 NEXT_PUBLIC_MAIN_DOMAIN=localhost
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
+NEXT_PUBLIC_API_BASE_URL=https://api.ideastoweb.com
 ```
 
 ### 3. Setup Local Subdomains (Development)

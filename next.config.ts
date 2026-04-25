@@ -2,6 +2,7 @@ import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
   /* config options here */
+  output: "standalone",
 
   // Enable Turbopack (Next.js 16 default) with source maps for debugging
   turbopack: {

@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ideastoweb-frontend-config
+  namespace: iwfe
+data:
+  NODE_ENV: "production"
+  PORT: "3000"
+  NEXT_PUBLIC_MAIN_DOMAIN: "ideastoweb.com"
+  NEXT_PUBLIC_API_BASE_URL: "https://api.ideastoweb.com"
+  NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: "dhexmnaxl"

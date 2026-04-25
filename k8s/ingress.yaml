@@ -1,0 +1,51 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ideastoweb-frontend
+  namespace: iwfe
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+
+spec:
+  ingressClassName: traefik
+
+  tls:
+    - hosts:
+        - ideastoweb.com
+        - www.ideastoweb.com
+        - "*.ideastoweb.com"
+      secretName: frontend-tls
+
+  rules:
+    - host: ideastoweb.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ideastoweb-frontend
+                port:
+                  number: 80
+
+    - host: www.ideastoweb.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ideastoweb-frontend
+                port:
+                  number: 80
+
+    - host: "*.ideastoweb.com"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ideastoweb-frontend
+                port:
+                  number: 80
