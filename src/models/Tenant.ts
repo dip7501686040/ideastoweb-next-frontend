@@ -1,4 +1,5 @@
 import { BaseModel } from "./BaseModel"
+import { getApiBaseUrl } from "@/lib/apiConfig"
 
 /**
  * Deployment configuration for tenant infrastructure isolation
@@ -72,7 +73,7 @@ export class Tenant extends BaseModel {
       return this.deploymentConfig.backendBaseUrl
     }
 
-    return process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080"
+    return getApiBaseUrl()
   }
 
   /**
