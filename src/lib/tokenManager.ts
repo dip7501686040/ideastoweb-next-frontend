@@ -1,4 +1,5 @@
 import { CookieManager } from "./cookies"
+import { getApiBaseUrl } from "./apiConfig"
 
 // Avoid importing AuthApi here to prevent circular dependency with BaseApi
 // Token refresh is performed directly via fetch to keep this module standalone
@@ -11,6 +12,7 @@ export class TokenManager {
   private static readonly ACCESS_TOKEN_KEY = "accessToken"
   private static readonly REFRESH_TOKEN_KEY = "refreshToken"
   private static refreshPromise: Promise<string> | null = null
+  private static readonly API_BASE_URL = getApiBaseUrl()
 
   /**
    * Get the current access token from cookies
@@ -78,7 +80,7 @@ export class TokenManager {
 
     this.refreshPromise = (async () => {
       try {
-        const res = await fetch("http://localhost:8000/auth/refresh-token", {
+        const res = await fetch(`${this.API_BASE_URL}/auth/refresh-token`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ refreshToken }),

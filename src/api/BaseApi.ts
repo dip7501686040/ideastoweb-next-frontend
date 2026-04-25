@@ -1,4 +1,5 @@
 import { TokenManager } from "@/lib/tokenManager"
+import { getApiBaseUrl } from "@/lib/apiConfig"
 
 export type RequestOptions = {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
@@ -8,7 +9,7 @@ export type RequestOptions = {
 }
 
 export class BaseApi {
-  protected baseUrl = "http://localhost:8000"
+  protected baseUrl = getApiBaseUrl()
 
   protected async request<T = any>(path: string, options: RequestOptions = {}): Promise<T> {
     // Get access token for authenticated requests
