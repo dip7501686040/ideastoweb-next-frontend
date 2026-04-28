@@ -38,14 +38,24 @@ pipeline {
     stage('Build & Push Docker Image') {
       steps {
         withCredentials([usernamePassword(
-          credentialsId: 'dockerhub-creds',
-          usernameVariable: 'DOCKER_USER',
-          passwordVariable: 'DOCKER_PASS'
-        )]) {
+            credentialsId: 'dockerhub-creds',
+            usernameVariable: 'DOCKER_USER',
+            passwordVariable: 'DOCKER_PASS'
+          ),
+          string(credentialsId: 'next-public-main-domain', variable: 'NEXT_PUBLIC_MAIN_DOMAIN'),
+          string(credentialsId: 'next-public-api-base-url', variable: 'NEXT_PUBLIC_API_BASE_URL'),
+          string(credentialsId: 'next-public-cloudinary-cloud-name', variable: 'NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME'),
+          string(credentialsId: 'next-public-stripe-publishable-key', variable: 'NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY')
+        ]) {
           sh '''
             echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
 
-            docker build -t $DOCKER_IMAGE:${TAG} .
+            docker build \
+              --build-arg NEXT_PUBLIC_MAIN_DOMAIN="$NEXT_PUBLIC_MAIN_DOMAIN" \
+              --build-arg NEXT_PUBLIC_API_BASE_URL="$NEXT_PUBLIC_API_BASE_URL" \
+              --build-arg NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME="$NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME" \
+              --build-arg NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="$NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY" \
+              -t $DOCKER_IMAGE:${TAG} .
 
             docker push $DOCKER_IMAGE:${TAG}
           '''
@@ -57,7 +67,7 @@ pipeline {
       steps {
         sh '''
           kubectl set image deployment/$K8S_DEPLOYMENT \
-          ideastoweb-frontend=$DOCKER_IMAGE:${TAG} -n $K8S_NAMESPACE
+          ideastoweb-frontend=$DOCKER_IMAGE:$TAG -n $K8S_NAMESPACE
 
           kubectl rollout status deployment/$K8S_DEPLOYMENT -n $K8S_NAMESPACE
         '''
