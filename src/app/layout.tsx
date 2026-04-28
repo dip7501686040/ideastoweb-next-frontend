@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google"
 import { RootProvider } from "@/providers/TenantProvider"
 
 import "./globals.css"
-import { getApiBaseUrl } from "@/lib/apiConfig"
 import { getCurrentTenant, getServerAdminConfig } from "@/lib/tenantContext"
 
 const geistSans = Geist({
@@ -35,18 +34,10 @@ export default async function RootLayout({
   // Detect context once from hostname
   const tenant = await getCurrentTenant()
   const adminConfig = await getServerAdminConfig()
-  const runtimeConfig = {
-    apiBaseUrl: getApiBaseUrl()
-  }
 
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `window.__RUNTIME_CONFIG__ = ${JSON.stringify(runtimeConfig)};`
-          }}
-        />
         <RootProvider tenant={tenant} adminConfig={adminConfig}>
           {children}
         </RootProvider>
